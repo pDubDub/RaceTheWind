@@ -1,3 +1,3 @@
 # RaceTheWind
 
-Attempting to port a 2D arcade racing game from a Python/Pygame project to iOS.
+Attempting iOS/Swift port of my AirRacer7 2D arcade racing game (originally written in Python/Pygame).
