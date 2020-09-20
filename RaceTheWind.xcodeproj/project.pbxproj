@@ -8,8 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		0D354DC923B29FC800116EB4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D354DC823B29FC800116EB4 /* AppDelegate.swift */; };
-		0D354DCB23B29FC800116EB4 /* GameScene.sks in Resources */ = {isa = PBXBuildFile; fileRef = 0D354DCA23B29FC800116EB4 /* GameScene.sks */; };
-		0D354DCD23B29FC800116EB4 /* Actions.sks in Resources */ = {isa = PBXBuildFile; fileRef = 0D354DCC23B29FC800116EB4 /* Actions.sks */; };
 		0D354DCF23B29FC800116EB4 /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D354DCE23B29FC800116EB4 /* GameScene.swift */; };
 		0D354DD123B29FC800116EB4 /* GameViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D354DD023B29FC800116EB4 /* GameViewController.swift */; };
 		0D354DD423B29FC800116EB4 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0D354DD223B29FC800116EB4 /* Main.storyboard */; };
@@ -20,8 +18,6 @@
 /* Begin PBXFileReference section */
 		0D354DC523B29FC800116EB4 /* RaceTheWind.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RaceTheWind.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0D354DC823B29FC800116EB4 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		0D354DCA23B29FC800116EB4 /* GameScene.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = GameScene.sks; sourceTree = "<group>"; };
-		0D354DCC23B29FC800116EB4 /* Actions.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Actions.sks; sourceTree = "<group>"; };
 		0D354DCE23B29FC800116EB4 /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
 		0D354DD023B29FC800116EB4 /* GameViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameViewController.swift; sourceTree = "<group>"; };
 		0D354DD323B29FC800116EB4 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -61,8 +57,6 @@
 			isa = PBXGroup;
 			children = (
 				0D354DC823B29FC800116EB4 /* AppDelegate.swift */,
-				0D354DCA23B29FC800116EB4 /* GameScene.sks */,
-				0D354DCC23B29FC800116EB4 /* Actions.sks */,
 				0D354DCE23B29FC800116EB4 /* GameScene.swift */,
 				0D354DD023B29FC800116EB4 /* GameViewController.swift */,
 				0D354DD223B29FC800116EB4 /* Main.storyboard */,
@@ -132,10 +126,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				0D354DD423B29FC800116EB4 /* Main.storyboard in Resources */,
-				0D354DCB23B29FC800116EB4 /* GameScene.sks in Resources */,
 				0D354DD623B29FC900116EB4 /* Assets.xcassets in Resources */,
 				0D354DD923B29FC900116EB4 /* LaunchScreen.storyboard in Resources */,
-				0D354DCD23B29FC800116EB4 /* Actions.sks in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -224,7 +216,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.4;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -278,7 +270,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.4;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
