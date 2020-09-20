@@ -4,7 +4,10 @@
 //
 //  Created by Patrick Wheeler on 12/24/19.
 //  Copyright © 2019 Patrick Wheeler. All rights reserved.
-//
+/*
+    Race The Wind is a port from Python to Swift/iOS of a simple air racing slalom game that I built for CIS151.
+    Loosely inspired byan old Atari 2600 game of air racing slalom called Sky Jinks.
+ */
 
 import SpriteKit
 
@@ -80,8 +83,14 @@ class GameScene: SKScene {
 //    private var spinnyNode : SKShapeNode?
 //
 
-//
-//
+/*      Perhaps we can have 4 or more different control options:
+            1 - plane matches touches
+            2 - plane goes to touch (like the Python version)
+            3 - yoke determins whether plane goes left or right (i.e. plane goes left if yoke is left)
+            4 - yoke determines bank, which in turn determines direction (have to yoke left if banked right to level out)
+
+        ...and for double the options, yoke could be set by either touch or tilt!
+*/
     func touchDown(atPoint pos : CGPoint) {
 //        if let n = self.spinnyNode?.copy() as! SKShapeNode? {
 //            n.position = pos
