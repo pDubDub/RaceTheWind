@@ -10,24 +10,40 @@
  */
 
 import SpriteKit
+import CoreGraphics
 
 class GameScene: SKScene {
 
-    let landscape = SKSpriteNode(imageNamed: "field2048")
-    let racer = SKSpriteNode(imageNamed: "GeeBee100")
-    let playableRect: CGRect
-    let yoke = SKShapeNode(circleOfRadius: 60)
+    let playableWidth: CGFloat
+    let leftMargin: CGFloat
 
+    var lastUpdateTime: TimeInterval = 0
+    var dt: TimeInterval = 0
+
+    let landscape = SKSpriteNode(imageNamed: "field2048")
+    let racer = Plane()
+    let cloud = Cloud()                                 // Does Cloud really need to be its own class. I'm thinking maybe not?
+
+
+
+//    let playableRect: CGRect
+    let yoke = SKShapeNode(circleOfRadius: 60)
     var lastTouch: CGPoint
-    var airspeed: CGFloat = 10
+
+    var airspeedPointsPerSec: CGPoint = CGPoint(x: 0, y: 200.0)
 
     override init(size: CGSize) {
         let maxAspectRatio: CGFloat = 16.0/9.0
-        let playableHeight = size.width / maxAspectRatio
-        let playableMargin = (size.height-playableHeight)/2.0
-        playableRect = CGRect(x: 0, y: playableMargin,
-                              width: size.width,
-                              height: playableHeight)
+        playableWidth = size.height / maxAspectRatio
+        leftMargin = (size.width-playableWidth)/2.0
+//        let playableMargin = (size.width-playableWidth)/2.0
+//        playableRect = CGRect(x: 0, y: playableMargin,
+//                              width: playableWidth,
+//                              height: size.height)
+        print("Size.height is \(size.height) so the playable width is \(playableWidth) so the missing left margin is \(leftMargin) pixels wide.")
+
+        // TODO - maybe what we want to do, is make the upper 3:4 section of the iphone screen the playable area, leaving the bottom for control only
+        //    But then the ipad we can drop that bottom margin.
 
         lastTouch = CGPoint(x: size.width/2, y: 200)
 
@@ -48,33 +64,92 @@ class GameScene: SKScene {
         landscape.zPosition = -1
         addChild(landscape)
 
-        racer.anchorPoint = CGPoint(x: 0.5, y: 0.5)
-        racer.position = CGPoint(x: size.width/2, y: size.height/3)
+//        racer.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+        racer.position = CGPoint(x: size.width/2, y: lastTouch.y + airspeedPointsPerSec.y)
+//        racer.scale(to: CGSize(width: 2.0, height: 2.0))          // seems to make sprite just disappear
         addChild(racer)
+
+        cloud.position.x = CGFloat.random(in: (leftMargin) ... (leftMargin + playableWidth))
+        print(cloud.position.x)
+        // TODO - usavble iPhone screen ranges from about 600 to 1400. We might need usable rect formulae above after all.
+
+        cloud.position.y = size.height + cloud.size.height
+        addChild(cloud)
 
         addChild(yoke)
 
+//        print(size.height)
     }
 
     override func update(_ currentTime: TimeInterval) {
         // Called before each frame is rendered
 
-        // implement a moveBy(y: ,duration:) on background
+        // delta-t
+        if lastUpdateTime > 0 {
+            dt = currentTime - lastUpdateTime
+        } else {
+            dt = 0
+        }
+        lastUpdateTime = currentTime
 
-        //   ...and an if, that checks if background has moved to the limit,
-        //      and moves it back up if it has.
+        // control
+        yoke.position = lastTouch
 
+        // move racer
+        racer.position.x = yoke.position.x
+
+        // TODO - change all of these 100, 200 numbers to percentages of the screen height
+        // throttle based on touch.y
+//        racer.throttle = min(max((yoke.position.y - 200), 0), 400) / 400
+        racer.throttle = min(max(yoke.position.y / (size.height/2), 0.10), 1.0)
+        // move airspeed towards throttle
+        let change : CGFloat = ((racer.throttle * 400) - airspeedPointsPerSec.y) / 10
+        airspeedPointsPerSec.y += change
+        if airspeedPointsPerSec.y < 50 {
+            airspeedPointsPerSec.y = 50
+        } else if airspeedPointsPerSec.y > 400 {
+            airspeedPointsPerSec.y = 400
+        }
+
+        print("touch.y: \(lastTouch.y) yields throttle of \(racer.throttle) and the airspeed is now \(airspeedPointsPerSec.y)")
+
+        racer.position.y = 2 * airspeedPointsPerSec.y + 200
+
+        // move landscape
         landscape.position = CGPoint(x: landscape.position.x,
-                              y: landscape.position.y - airspeed)
+                                     y: landscape.position.y - (2 * airspeedPointsPerSec.y * CGFloat(dt)))
         if landscape.position.y <= -landscape.size.height/2 {
             landscape.position.y -= landscape.position.y
 //            print("background reset")
         }
 
-        yoke.position = lastTouch
-        racer.position.x = yoke.position.x
+        // Move cloud. This used to be a class method in Python version.
+        cloud.position.y = cloud.position.y - (2 * airspeedPointsPerSec.y * CGFloat(dt))
+        if cloud.isDriftingRight {
+            cloud.position.x += 1
+        } else {
+            cloud.position.x -= 1
+        }
+        if cloud.position.y <= 0 - cloud.size.height {
+            cloud.position.x = CGFloat.random(in: (leftMargin) ... (leftMargin + playableWidth))
+            cloud.position.y = size.height + cloud.size.height
+            if cloud.position.x < leftMargin + playableWidth/4 {
+                // if cloud starts on the left, drift right
+                cloud.isDriftingRight = true
+            } else if cloud.position.x > leftMargin + playableWidth * 0.75 {
+                // if starts on right, drift left
+                cloud.isDriftingRight = false
+            } else {
+                // else random
+                cloud.isDriftingRight = Int.random(in: 1 ... 2) == 1 ? true : false
+                print(cloud.isDriftingRight)
+            }
+        }
     }
 
+    func move(sprite: SKSpriteNode, airspeed: CGPoint) {
+        // should borrow move methodology from zombies
+    }
 
 
     // I kind of think the template drawn graphics that follow the mouse might be cool to use somehow
