@@ -22,7 +22,9 @@ class GameScene: SKScene {
 
     let landscape = SKSpriteNode(imageNamed: "field2048")
     let racer = Plane()
+    let racerShadow = SKSpriteNode(imageNamed: "GeeBee100_shadow")
     let cloud = Cloud()                                 // Does Cloud really need to be its own class. I'm thinking maybe not?
+    let cloudShadow = SKSpriteNode(imageNamed: "cloud_v2_shadow")
 
 
 
@@ -69,12 +71,21 @@ class GameScene: SKScene {
 //        racer.scale(to: CGSize(width: 2.0, height: 2.0))          // seems to make sprite just disappear
         addChild(racer)
 
+        racerShadow.position.x = racer.position.x + 40
+        racerShadow.position.y = racer.position.y - 40
+        addChild(racerShadow)
+
         cloud.position.x = CGFloat.random(in: (leftMargin) ... (leftMargin + playableWidth))
         print(cloud.position.x)
         // TODO - usavble iPhone screen ranges from about 600 to 1400. We might need usable rect formulae above after all.
 
         cloud.position.y = size.height + cloud.size.height
         addChild(cloud)
+
+        cloudShadow.position.x = cloud.position.x + 100
+        cloudShadow.position.y = cloud.position.y - 100
+        cloudShadow.zPosition = 1
+        addChild(cloudShadow)
 
         addChild(yoke)
 
@@ -103,28 +114,35 @@ class GameScene: SKScene {
 //        racer.throttle = min(max((yoke.position.y - 200), 0), 400) / 400
         racer.throttle = min(max(yoke.position.y / (size.height/2), 0.10), 1.0)
         // move airspeed towards throttle
-        let change : CGFloat = ((racer.throttle * 400) - airspeedPointsPerSec.y) / 10
+
+        // TODO - add drag functionality from Python version
+        let change : CGFloat = ((racer.throttle * 400) - airspeedPointsPerSec.y) / 20
         airspeedPointsPerSec.y += change
-        if airspeedPointsPerSec.y < 50 {
-            airspeedPointsPerSec.y = 50
-        } else if airspeedPointsPerSec.y > 400 {
-            airspeedPointsPerSec.y = 400
+        if airspeedPointsPerSec.y < racer.minAirspeed {            // minimum speed limit
+            airspeedPointsPerSec.y = racer.minAirspeed
+        } else if airspeedPointsPerSec.y > racer.maxAirspeed {
+            airspeedPointsPerSec.y = racer.maxAirspeed            // max speed limit
         }
 
         print("touch.y: \(lastTouch.y) yields throttle of \(racer.throttle) and the airspeed is now \(airspeedPointsPerSec.y)")
 
-        racer.position.y = 2 * airspeedPointsPerSec.y + 200
+        racer.position.y = 3.5 * airspeedPointsPerSec.y
+
+        racerShadow.position.x = racer.position.x + 40
+        racerShadow.position.y = racer.position.y - 40
 
         // move landscape
         landscape.position = CGPoint(x: landscape.position.x,
-                                     y: landscape.position.y - (2 * airspeedPointsPerSec.y * CGFloat(dt)))
+                                     y: landscape.position.y - (3 * airspeedPointsPerSec.y * CGFloat(dt)))
         if landscape.position.y <= -landscape.size.height/2 {
             landscape.position.y -= landscape.position.y
 //            print("background reset")
         }
 
+        // TODO - need to create a singular delta-y variable, based on speed, used above and below and in the future, for the pylons
+
         // Move cloud. This used to be a class method in Python version.
-        cloud.position.y = cloud.position.y - (2 * airspeedPointsPerSec.y * CGFloat(dt))
+        cloud.position.y = cloud.position.y - (3 * airspeedPointsPerSec.y * CGFloat(dt))
         if cloud.isDriftingRight {
             cloud.position.x += 1
         } else {
@@ -145,6 +163,9 @@ class GameScene: SKScene {
                 print(cloud.isDriftingRight)
             }
         }
+
+        cloudShadow.position.x = cloud.position.x + 100
+        cloudShadow.position.y = cloud.position.y - 100
     }
 
     func move(sprite: SKSpriteNode, airspeed: CGPoint) {
