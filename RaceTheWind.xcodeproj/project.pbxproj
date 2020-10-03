@@ -13,6 +13,7 @@
 		0D354DD423B29FC800116EB4 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0D354DD223B29FC800116EB4 /* Main.storyboard */; };
 		0D354DD623B29FC900116EB4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0D354DD523B29FC900116EB4 /* Assets.xcassets */; };
 		0D354DD923B29FC900116EB4 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0D354DD723B29FC900116EB4 /* LaunchScreen.storyboard */; };
+		0D4352B52527DF0E001E14AB /* Pylon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4352B42527DF0E001E14AB /* Pylon.swift */; };
 		0DB7C535251989FA00E4CF8F /* Plane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB7C534251989FA00E4CF8F /* Plane.swift */; };
 		0DBAAE982519B0F500B7B64A /* Cloud.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DBAAE972519B0F500B7B64A /* Cloud.swift */; };
 /* End PBXBuildFile section */
@@ -26,6 +27,7 @@
 		0D354DD523B29FC900116EB4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0D354DD823B29FC900116EB4 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		0D354DDA23B29FC900116EB4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		0D4352B42527DF0E001E14AB /* Pylon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pylon.swift; sourceTree = "<group>"; };
 		0DB7C534251989FA00E4CF8F /* Plane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Plane.swift; sourceTree = "<group>"; };
 		0DBAAE972519B0F500B7B64A /* Cloud.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cloud.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -63,6 +65,7 @@
 				0D354DC823B29FC800116EB4 /* AppDelegate.swift */,
 				0D354DCE23B29FC800116EB4 /* GameScene.swift */,
 				0DB7C534251989FA00E4CF8F /* Plane.swift */,
+				0D4352B42527DF0E001E14AB /* Pylon.swift */,
 				0DBAAE972519B0F500B7B64A /* Cloud.swift */,
 				0D354DD023B29FC800116EB4 /* GameViewController.swift */,
 				0D354DD223B29FC800116EB4 /* Main.storyboard */,
@@ -146,6 +149,7 @@
 			files = (
 				0DBAAE982519B0F500B7B64A /* Cloud.swift in Sources */,
 				0D354DCF23B29FC800116EB4 /* GameScene.swift in Sources */,
+				0D4352B52527DF0E001E14AB /* Pylon.swift in Sources */,
 				0D354DD123B29FC800116EB4 /* GameViewController.swift in Sources */,
 				0DB7C535251989FA00E4CF8F /* Plane.swift in Sources */,
 				0D354DC923B29FC800116EB4 /* AppDelegate.swift in Sources */,

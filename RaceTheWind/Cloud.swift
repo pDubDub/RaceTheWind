@@ -18,7 +18,7 @@ class Cloud: SKSpriteNode {
         super.init(texture: texture, color: .white, size: texture.size())
         name = "Cloud"
 
-        zPosition = 15
+        zPosition = 50
 
         anchorPoint = CGPoint(x: 0.5, y: 0.5)
 //        position = CGPoint(x: size.width/2, y: size.height/3)

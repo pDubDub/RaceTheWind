@@ -11,6 +11,7 @@
 
 import SpriteKit
 import CoreGraphics
+import CoreMotion
 
 class GameScene: SKScene {
 
@@ -19,20 +20,27 @@ class GameScene: SKScene {
 
     var lastUpdateTime: TimeInterval = 0
     var dt: TimeInterval = 0
+    var airspeedPointsPerSec: CGPoint = CGPoint(x: 0, y: 200.0)
+    var distanceThisUpdate: CGFloat = 0
 
     let landscape = SKSpriteNode(imageNamed: "field2048")
     let racer = Plane()
     let racerShadow = SKSpriteNode(imageNamed: "GeeBee100_shadow")
-    let cloud = Cloud()                                 // Does Cloud really need to be its own class. I'm thinking maybe not?
+    let cloud = Cloud()                                         // Cloud is own class only because of drift boolean property.
     let cloudShadow = SKSpriteNode(imageNamed: "cloud_v2_shadow")
 
+    let leftPylon = Pylon(side: .left)
+    let rightPylon = Pylon(side: .right)
 
 
 //    let playableRect: CGRect
     let yoke = SKShapeNode(circleOfRadius: 60)
+    var previousYoke: CGPoint
     var lastTouch: CGPoint
+    let tilt = SKShapeNode(circleOfRadius: 20)
 
-    var airspeedPointsPerSec: CGPoint = CGPoint(x: 0, y: 200.0)
+    var motionManager: CMMotionManager!
+
 
     override init(size: CGSize) {
         let maxAspectRatio: CGFloat = 16.0/9.0
@@ -48,6 +56,7 @@ class GameScene: SKScene {
         //    But then the ipad we can drop that bottom margin.
 
         lastTouch = CGPoint(x: size.width/2, y: 200)
+        previousYoke = lastTouch
 
 
         super.init(size: size)
@@ -59,7 +68,10 @@ class GameScene: SKScene {
 
     override func didMove(to view: SKView) {
         // good place for initial setup
-        backgroundColor = SKColor.black
+//        backgroundColor = SKColor.black
+        motionManager = CMMotionManager()
+        motionManager.startAccelerometerUpdates()
+//        motionManager.stopGyroUpdates()
 
         landscape.anchorPoint = CGPoint(x: 0.5, y: 0.0)
         landscape.position = CGPoint(x: size.width/2, y: 0)
@@ -75,6 +87,7 @@ class GameScene: SKScene {
         racerShadow.position.y = racer.position.y - 40
         addChild(racerShadow)
 
+        // cloud setup
         cloud.position.x = CGFloat.random(in: (leftMargin) ... (leftMargin + playableWidth))
         print(cloud.position.x)
         // TODO - usavble iPhone screen ranges from about 600 to 1400. We might need usable rect formulae above after all.
@@ -88,6 +101,20 @@ class GameScene: SKScene {
         addChild(cloudShadow)
 
         addChild(yoke)
+        tilt.fillColor = UIColor(red: 0, green: 0, blue: 0.8, alpha: 0.2)
+        addChild(tilt)
+
+        leftPylon.position = CGPoint(x: leftMargin + playableWidth/8, y: size.height + leftPylon.size.height)
+        leftPylon.resetY = size.height + leftPylon.size.height
+        leftPylon.minLeft = leftMargin + racer.size.width * 2
+        leftPylon.maxRight = leftMargin + playableWidth - racer.size.width * 2
+        addChild(leftPylon)
+
+        rightPylon.position = CGPoint(x: leftMargin + playableWidth * 7/8, y: leftPylon.position.y + size.height/2 + rightPylon.size.height)
+        rightPylon.resetY = size.height + rightPylon.size.height
+        rightPylon.minLeft = leftMargin + racer.size.width * 2
+        rightPylon.maxRight = leftMargin + playableWidth - racer.size.width * 2
+        addChild(rightPylon)
 
 //        print(size.height)
     }
@@ -104,7 +131,25 @@ class GameScene: SKScene {
         lastUpdateTime = currentTime
 
         // control
-        yoke.position = lastTouch
+//        yoke.position = lastTouch
+        #if targetEnvironment(simulator)
+            yoke.position = lastTouch
+        #else
+        if let accelerometerData = motionManager.accelerometerData {
+            print("pitch: \(CGFloat(accelerometerData.acceleration.y)) roll: \(CGFloat(accelerometerData.acceleration.x))")
+            tilt.position.x = size.width/2 + CGFloat(accelerometerData.acceleration.x) * size.width / 3
+            tilt.position.y = size.height/3 + CGFloat(accelerometerData.acceleration.y + 0.5) * size.height / 3
+        }
+        yoke.position.x = (tilt.position.x + 2 * previousYoke.x ) / 3
+        yoke.position.y = (tilt.position.y + 2 * previousYoke.y ) / 3
+        previousYoke = yoke.position
+        // This was trying to get tilt and roll from the gyro instead of the accelerometer.
+//        if let gyroData = motionManager.gyroData {
+//            let roll = gyroData.attitude.roll
+//            print(roll)
+//        }
+        #endif
+
 
         // move racer
         racer.position.x = yoke.position.x
@@ -124,16 +169,20 @@ class GameScene: SKScene {
             airspeedPointsPerSec.y = racer.maxAirspeed            // max speed limit
         }
 
-        print("touch.y: \(lastTouch.y) yields throttle of \(racer.throttle) and the airspeed is now \(airspeedPointsPerSec.y)")
+//        print("touch.y: \(lastTouch.y) yields throttle of \(racer.throttle) and the airspeed is now \(airspeedPointsPerSec.y)")
 
         racer.position.y = 3.5 * airspeedPointsPerSec.y
+        // TODO - position.y needs to be based on something different.
+        //      At the present, as you throttle down, the plane visually moves backwards compared to the background landscape.
 
         racerShadow.position.x = racer.position.x + 40
         racerShadow.position.y = racer.position.y - 40
 
+        distanceThisUpdate = 3 * airspeedPointsPerSec.y * CGFloat(dt)
+
         // move landscape
         landscape.position = CGPoint(x: landscape.position.x,
-                                     y: landscape.position.y - (3 * airspeedPointsPerSec.y * CGFloat(dt)))
+                                     y: landscape.position.y - distanceThisUpdate)
         if landscape.position.y <= -landscape.size.height/2 {
             landscape.position.y -= landscape.position.y
 //            print("background reset")
@@ -141,8 +190,9 @@ class GameScene: SKScene {
 
         // TODO - need to create a singular delta-y variable, based on speed, used above and below and in the future, for the pylons
 
-        // Move cloud. This used to be a class method in Python version.
-        cloud.position.y = cloud.position.y - (3 * airspeedPointsPerSec.y * CGFloat(dt))
+        // Cloud update. This used to be a class method in Python version.
+        // could in theory make the height of each cloud vary.
+        cloud.position.y = cloud.position.y - distanceThisUpdate
         if cloud.isDriftingRight {
             cloud.position.x += 1
         } else {
@@ -166,6 +216,11 @@ class GameScene: SKScene {
 
         cloudShadow.position.x = cloud.position.x + 100
         cloudShadow.position.y = cloud.position.y - 100
+
+        // update Pylons
+        leftPylon.update(by: distanceThisUpdate, otherPylonX: rightPylon.position.x)
+        rightPylon.update(by: distanceThisUpdate, otherPylonX: leftPylon.position.x)
+
     }
 
     func move(sprite: SKSpriteNode, airspeed: CGPoint) {

@@ -22,7 +22,7 @@ class Plane: SKSpriteNode {
         super.init(texture: texture, color: .white, size: texture.size())
         name = "Racer"
         
-        zPosition = 10
+        zPosition = 20
 
         anchorPoint = CGPoint(x: 0.5, y: 0.5)
 //        position = CGPoint(x: size.width/2, y: size.height/3)
