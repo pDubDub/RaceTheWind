@@ -18,10 +18,20 @@ class GameScene: SKScene {
     let playableWidth: CGFloat
     let leftMargin: CGFloat
 
+    let speedometer: SKLabelNode = SKLabelNode()
+
     var lastUpdateTime: TimeInterval = 0
     var dt: TimeInterval = 0
     var airspeedPointsPerSec: CGPoint = CGPoint(x: 0, y: 200.0)
     var distanceThisUpdate: CGFloat = 0
+
+    var newAirspeed: CGFloat = 200
+    var newHeading: CGFloat = 0
+    var newDistancePerUpate: CGFloat = 0
+    var newVelocity: CGPoint = CGPoint.zero
+    var newThrottle: CGFloat = 0
+    var newPower: CGFloat = 0
+    var newDrag: CGFloat = 0
 
     let landscape = SKSpriteNode(imageNamed: "field2048")
     let racer = Plane()
@@ -38,6 +48,7 @@ class GameScene: SKScene {
     var previousYoke: CGPoint
     var lastTouch: CGPoint
     let tilt = SKShapeNode(circleOfRadius: 20)
+    let headingIndicator = SKShapeNode(rect: CGRect(x: 0, y: 0, width: 10, height: 50), cornerRadius: 2)
 
     var motionManager: CMMotionManager!
 
@@ -103,6 +114,9 @@ class GameScene: SKScene {
         addChild(yoke)
         tilt.fillColor = UIColor(red: 0, green: 0, blue: 0.8, alpha: 0.2)
         addChild(tilt)
+        headingIndicator.position.y = 50
+        headingIndicator.position.x = size.width/2
+        addChild(headingIndicator)
 
         leftPylon.position = CGPoint(x: leftMargin + playableWidth/8, y: size.height + leftPylon.size.height)
         leftPylon.resetY = size.height + leftPylon.size.height
@@ -117,6 +131,12 @@ class GameScene: SKScene {
         addChild(rightPylon)
 
 //        print(size.height)
+
+        speedometer.position = CGPoint(x: leftMargin + playableWidth/2, y: size.height*7/8)
+        speedometer.fontColor = UIColor.black
+        speedometer.fontSize = size.height * 0.05
+//        speedometer.text = "100"
+        addChild(speedometer)
     }
 
     override func update(_ currentTime: TimeInterval) {
@@ -136,11 +156,16 @@ class GameScene: SKScene {
             yoke.position = lastTouch
         #else
         if let accelerometerData = motionManager.accelerometerData {
-            print("pitch: \(CGFloat(accelerometerData.acceleration.y)) roll: \(CGFloat(accelerometerData.acceleration.x))")
-            tilt.position.x = size.width/2 + CGFloat(accelerometerData.acceleration.x) * size.width / 3
+//            print("pitch: \(CGFloat(accelerometerData.acceleration.y)) roll: \(CGFloat(accelerometerData.acceleration.x))")
+            tilt.position.x = size.width/2 + CGFloat(accelerometerData.acceleration.x) * size.width / 2
+                // changed from 3 to 2, makes less tilt yield full side yoke
             tilt.position.y = size.height/3 + CGFloat(accelerometerData.acceleration.y + 0.5) * size.height / 3
         }
-        yoke.position.x = (tilt.position.x + 2 * previousYoke.x ) / 3
+
+        // min/max keeps yoke within limits of the screen
+        yoke.position.x = min(leftMargin + playableWidth - 30, max(leftMargin + 30, (tilt.position.x + 2 * previousYoke.x ) / 3))
+
+
         yoke.position.y = (tilt.position.y + 2 * previousYoke.y ) / 3
         previousYoke = yoke.position
         // This was trying to get tilt and roll from the gyro instead of the accelerometer.
@@ -150,15 +175,14 @@ class GameScene: SKScene {
 //        }
         #endif
 
-
-        // move racer
-        racer.position.x = yoke.position.x
-
         // TODO - change all of these 100, 200 numbers to percentages of the screen height
         // throttle based on touch.y
 //        racer.throttle = min(max((yoke.position.y - 200), 0), 400) / 400
         racer.throttle = min(max(yoke.position.y / (size.height/2), 0.10), 1.0)
+        newThrottle = 100 * min(max(yoke.position.y / (size.height/2), 0.10), 1.0)  // ranges 10 to 100
         // move airspeed towards throttle
+
+//        print("touch.y: \(lastTouch.y) yields throttle of \(racer.throttle) and the airspeed is now \(airspeedPointsPerSec.y)")
 
         // TODO - add drag functionality from Python version
         let change : CGFloat = ((racer.throttle * 400) - airspeedPointsPerSec.y) / 20
@@ -169,9 +193,129 @@ class GameScene: SKScene {
             airspeedPointsPerSec.y = racer.maxAirspeed            // max speed limit
         }
 
-//        print("touch.y: \(lastTouch.y) yields throttle of \(racer.throttle) and the airspeed is now \(airspeedPointsPerSec.y)")
 
-        racer.position.y = 3.5 * airspeedPointsPerSec.y
+        newDrag = pow(newAirspeed, 2) / 2000
+
+        //        print("Throttle: \(newThrottle)\tAirspeed: \(newAirspeed)\tDrag: \(newDrag)")  // ranges from about 0.1 to 1.0 (bottom of screen to middle)
+        newAirspeed += (newThrottle - newDrag) / 50
+
+        // python version also has a line to add extra drag based on dx
+//        newAirspeed -= abs(newVelocity.x) / 5
+
+
+        newDistancePerUpate = 2.5 * newAirspeed * CGFloat(dt)
+
+        // move racer
+//        racer.position.x = yoke.position.x        // this is control mode 1: plane equal to yoke
+
+//        racer.position.x += newVelocity.x      // this is mode 2: plane moves to yoke
+
+        // mode 3! This is cool, but more difficult and a little less enjoyable to play.
+//        if heading.position.x <= leftMargin + 30 {
+//            heading.position.x = leftMargin + 30
+//        } else if heading.position.x >= leftMargin + playableWidth - 30 {
+//            heading.position.x = leftMargin + playableWidth - 30
+//        }
+//        heading.position.x += (yoke.position.x - size.width/2 ) / 5
+//        racer.zRotation = (heading.position.x - size.width/2 ) / -400
+//            // this is purely 'by eye' method, not mathematical at all.
+//        racerShadow.zRotation = racer.zRotation
+//
+//        if racer.position.x <= leftMargin + racer.size.width {
+//            racer.position.x = leftMargin + racer.size.width
+//            heading.position.x += 20
+//        } else if racer.position.x >= leftMargin + playableWidth - racer.size.width {
+//            racer.position.x = leftMargin + playableWidth - racer.size.width
+//            heading.position.x -= 20
+//        }
+//        racer.position.x += (heading.position.x - size.width/2) / 30
+
+        /*
+            We've got stick positin from the tilt/touch -> yoke
+
+            If yoke.x < plane.x {
+                dx -= abs(yoke.x - dx) / 7
+                dx !< -newDistancePerUpdate + 1
+            } else {
+                dx += abs(yoke.x - dx) / 7
+                dx !> newDistancePerUpdate - 1
+            }
+            x += dx
+         */
+        let stick = min(1.0, (yoke.position.x - racer.position.x) / (size.width/2))
+       // stick is difference between yoke and plane, from -1 to 1
+//        print(stick)
+        newAirspeed -= 2 * abs(stick)
+        // this is inspired by Python verion, where greater drag was increased by a 1.8 * abs(dx)
+        // in this version, greater stick means greater drag
+
+        let targetHeading = 2.2 * -stick        // increasing literal increases maximum turn angle
+        newHeading = (newHeading + targetHeading) / 2
+        // TODO - this just puts the heading as the average between current and target
+        //      Should make it swing at a constant rate.
+        //      Will likely need a change of heading value.
+
+        // still sloppy...
+        // still hitting on condition where dx comes out higher than vel
+//        hdg: -0.7892237888890108     vel: 16.692588934000334      dx:16.82079923154579
+
+        racer.zRotation = newHeading
+        racerShadow.zRotation = racer.zRotation
+        newVelocity.x = -sin(newHeading) * newDistancePerUpate
+//        print("hdg: \(newHeading) \ttan: \(-tan(newHeading))\tvel: \(newDistancePerUpate) \t dx:\(newVelocity.x)")
+        racer.position.x += newVelocity.x
+
+        // could factor out " abs(stick - newVelocity.x) / 7 " below, and make sure it's not too extreme
+
+//        if yoke.position.x < racer.position.x {         // stick to the left
+//            newVelocity.x -= max(-10, abs(stick - newVelocity.x) / 7)
+////            dx !< -newDistancePerUpdate + 1
+//            if newVelocity.x < -newDistancePerUpate {
+//                        newVelocity.x = newDistancePerUpate + 1
+//                    }
+//        } else {
+//            newVelocity.x += min(10, abs(stick - newVelocity.x) / 7)
+////            dx !> newDistancePerUpdate - 1
+//            if newVelocity.x > newDistancePerUpate {
+//                        newVelocity.x = -newDistancePerUpate - 1
+//                    }
+//        }
+//        racer.position.x += newVelocity.x
+//        print(newVelocity.x)
+
+//        newVelocity.x = ( yoke.position.x - racer.position.x ) / 15
+//        if newVelocity.x > newDistancePerUpate {
+//            newVelocity.x = newDistancePerUpate - 1
+//        } else if newVelocity.x < -newDistancePerUpate {
+//            newVelocity.x = -newDistancePerUpate + 1
+//        }
+//        racer.position.x += newVelocity.x
+
+        // SO HERE IT IS:
+        /*
+                Touch or Tilt -> defines Yoke
+                Yoke -> Throttle -> Power
+                Power - Drag -> delta.V
+                Difference between Yoke and Position -> delta.x
+                Delta.x and V -> Heading & delta.y
+
+         */
+        // newAirspeed = airspeedPointsPerSec.y
+        // newHeading
+        // newVelocity: CGPoint
+
+//        print("Yoke: \(yoke.position.x)/\(yoke.position.y)")
+
+
+        newVelocity.y = sqrt(newDistancePerUpate * newDistancePerUpate - newVelocity.x * newVelocity.x)
+//        newHeading = atan2(newVelocity.x, newVelocity.y)
+//        print("dh: \(newDistancePerUpate)\tdx: \(newVelocity.x)\tdy: \(newVelocity.y)\tHdg: \(newHeading)")
+
+        // TODO - I think I need a currentHeading and a targetHeading, so we can ease currentHeading towards target and define a max deltaHeading
+
+        // TODO - update motion to factor velocity and direction into seperate x and y values
+        racer.position.y = ((newAirspeed - 100)/400 * size.height) - (newDistancePerUpate - newVelocity.y)
+//        racer.position.y = racer.position.y + newVelocity.y - newDistancePerUpate
         // TODO - position.y needs to be based on something different.
         //      At the present, as you throttle down, the plane visually moves backwards compared to the background landscape.
 
@@ -181,8 +325,7 @@ class GameScene: SKScene {
         distanceThisUpdate = 3 * airspeedPointsPerSec.y * CGFloat(dt)
 
         // move landscape
-        landscape.position = CGPoint(x: landscape.position.x,
-                                     y: landscape.position.y - distanceThisUpdate)
+        landscape.position.y = landscape.position.y - newVelocity.y
         if landscape.position.y <= -landscape.size.height/2 {
             landscape.position.y -= landscape.position.y
 //            print("background reset")
@@ -192,7 +335,7 @@ class GameScene: SKScene {
 
         // Cloud update. This used to be a class method in Python version.
         // could in theory make the height of each cloud vary.
-        cloud.position.y = cloud.position.y - distanceThisUpdate
+        cloud.position.y = cloud.position.y - newVelocity.y
         if cloud.isDriftingRight {
             cloud.position.x += 1
         } else {
@@ -210,7 +353,7 @@ class GameScene: SKScene {
             } else {
                 // else random
                 cloud.isDriftingRight = Int.random(in: 1 ... 2) == 1 ? true : false
-                print(cloud.isDriftingRight)
+//                print(cloud.isDriftingRight)
             }
         }
 
@@ -218,9 +361,10 @@ class GameScene: SKScene {
         cloudShadow.position.y = cloud.position.y - 100
 
         // update Pylons
-        leftPylon.update(by: distanceThisUpdate, otherPylonX: rightPylon.position.x)
-        rightPylon.update(by: distanceThisUpdate, otherPylonX: leftPylon.position.x)
+        leftPylon.update(by: newVelocity.y, otherPylonX: rightPylon.position.x, racerAt: racer.position)
+        rightPylon.update(by: newVelocity.y, otherPylonX: leftPylon.position.x, racerAt: racer.position)
 
+        speedometer.text = String("\(Int(newAirspeed)) mph")
     }
 
     func move(sprite: SKSpriteNode, airspeed: CGPoint) {

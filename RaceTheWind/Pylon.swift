@@ -19,6 +19,7 @@ class Pylon: SKSpriteNode {
     var resetY: CGFloat = 0
     var minLeft: CGFloat = 0
     var maxRight: CGFloat = 0
+    var isPassed: Bool = false
 
     init(side: Side) {
         let texture: SKTexture
@@ -44,16 +45,20 @@ class Pylon: SKSpriteNode {
         fatalError("Use init()")
     }
 
-    func update(by distanceThisUpdate: CGFloat, otherPylonX: CGFloat) {
+    func update(by distanceThisUpdate: CGFloat, otherPylonX: CGFloat,  racerAt: CGPoint) {
         if position.y <= 0 - size.height {
             // then move back to top of screen
             position.y = resetY
+            isPassed = false
+
 
             // ...and random x
             if name == "left" {
-                position.x = CGFloat.random(in: (minLeft) ... (otherPylonX))
+                position.x = CGFloat.random(in: (minLeft) ... (otherPylonX + 50))
+                texture = SKTexture(imageNamed: "pylon_L")
             } else {
-                position.x = CGFloat.random(in: (otherPylonX) ... (maxRight))
+                position.x = CGFloat.random(in: (min(maxRight - 100, otherPylonX - 50)) ... (maxRight))
+                texture = SKTexture(imageNamed: "pylon_R")
             }
             // TODO - there is an occasional error, I think when the otherPylonX value is beyond the min/max value
 
@@ -62,6 +67,19 @@ class Pylon: SKSpriteNode {
             // if pylon number is 1, then set texture to END
         }
         position.y = position.y - distanceThisUpdate
+
+        // add pass detection
+        if !isPassed && position.y < racerAt.y {
+            isPassed = true
+            // play flyby sound
+            if (name == "left" && racerAt.x < position.x) || (name == "right" && racerAt.x > position.x) {
+                texture = SKTexture(imageNamed: "pylon_OK")
+                // play a "GOOD" sound?
+            } else {
+                texture = SKTexture(imageNamed: "pylon_MISS")
+                // play a "MISS" sound!
+            }
+        }
     }
     
 }
