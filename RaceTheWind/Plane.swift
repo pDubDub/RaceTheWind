@@ -16,6 +16,7 @@ class Plane: SKSpriteNode {
     var minAirspeed: CGFloat = 75
     var maxAirspeed: CGFloat = 400
 
+    var altitude: Int = 10
 
     init() {
         let texture = SKTexture(imageNamed: "GeeBee100")

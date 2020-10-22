@@ -18,14 +18,18 @@ class GameScene: SKScene {
     let playableWidth: CGFloat
     let leftMargin: CGFloat
 
-    let speedometer: SKLabelNode = SKLabelNode()
+    let speedometerLabel: SKLabelNode = SKLabelNode()
+    let pylonCountLabel: SKLabelNode = SKLabelNode()
+    let pylonMissLabel:SKLabelNode = SKLabelNode()
+    let elapsedTimeLabel: SKLabelNode = SKLabelNode()
+    let bestTimeLabel: SKLabelNode = SKLabelNode()
 
     var lastUpdateTime: TimeInterval = 0
     var dt: TimeInterval = 0
     var airspeedPointsPerSec: CGPoint = CGPoint(x: 0, y: 200.0)
     var distanceThisUpdate: CGFloat = 0
 
-    var newAirspeed: CGFloat = 200
+    var newAirspeed: CGFloat = 150
     var newHeading: CGFloat = 0
     var newDistancePerUpate: CGFloat = 0
     var newVelocity: CGPoint = CGPoint.zero
@@ -42,13 +46,24 @@ class GameScene: SKScene {
     let leftPylon = Pylon(side: .left)
     let rightPylon = Pylon(side: .right)
 
+    var leftJudge: String = ""
+    var rightJudge: String = ""
+    var pylonsRemaining: Int = 10
+    var pylonsMissed: Int = 0
 
 //    let playableRect: CGRect
+    // HUD-UI
+    // TODO - replace these literals with percentages of screen size
     let yoke = SKShapeNode(circleOfRadius: 60)
     var previousYoke: CGPoint
     var lastTouch: CGPoint
     let tilt = SKShapeNode(circleOfRadius: 20)
-    let headingIndicator = SKShapeNode(rect: CGRect(x: 0, y: 0, width: 10, height: 50), cornerRadius: 2)
+    let ruddderIndicator = SKShapeNode(rect: CGRect(x: 0, y: 0, width: 10, height: 50), cornerRadius: 2)
+    let rudderStopLeft = SKShapeNode(rect: CGRect(x: 0, y: 0, width: 10, height: 20), cornerRadius: 2)
+    let rudderStopRight = SKShapeNode(rect: CGRect(x: 0, y: 0, width: 10, height: 20), cornerRadius: 2)
+    let throttleIndicator = SKShapeNode(rect: CGRect(x: 0, y: 0, width: 50, height: 10), cornerRadius: 2)
+    let throttleStopFull = SKShapeNode(rect: CGRect(x: 0, y: 0, width: 20, height: 10), cornerRadius: 2)
+    let throttleStopIdle = SKShapeNode(rect: CGRect(x: 0, y: 0, width: 20, height: 10), cornerRadius: 2)
 
     var motionManager: CMMotionManager!
 
@@ -62,6 +77,7 @@ class GameScene: SKScene {
 //                              width: playableWidth,
 //                              height: size.height)
         print("Size.height is \(size.height) so the playable width is \(playableWidth) so the missing left margin is \(leftMargin) pixels wide.")
+        print("Full width is \(size.width)")
 
         // TODO - maybe what we want to do, is make the upper 3:4 section of the iphone screen the playable area, leaving the bottom for control only
         //    But then the ipad we can drop that bottom margin.
@@ -100,7 +116,7 @@ class GameScene: SKScene {
 
         // cloud setup
         cloud.position.x = CGFloat.random(in: (leftMargin) ... (leftMargin + playableWidth))
-        print(cloud.position.x)
+//        print(cloud.position.x)
         // TODO - usavble iPhone screen ranges from about 600 to 1400. We might need usable rect formulae above after all.
 
         cloud.position.y = size.height + cloud.size.height
@@ -111,38 +127,85 @@ class GameScene: SKScene {
         cloudShadow.zPosition = 1
         addChild(cloudShadow)
 
-        addChild(yoke)
-        tilt.fillColor = UIColor(red: 0, green: 0, blue: 0.8, alpha: 0.2)
-        addChild(tilt)
-        headingIndicator.position.y = 50
-        headingIndicator.position.x = size.width/2
-        addChild(headingIndicator)
+
 
         leftPylon.position = CGPoint(x: leftMargin + playableWidth/8, y: size.height + leftPylon.size.height)
         leftPylon.resetY = size.height + leftPylon.size.height
         leftPylon.minLeft = leftMargin + racer.size.width * 2
         leftPylon.maxRight = leftMargin + playableWidth - racer.size.width * 2
+        leftPylon.screenSize = size.height
         addChild(leftPylon)
 
         rightPylon.position = CGPoint(x: leftMargin + playableWidth * 7/8, y: leftPylon.position.y + size.height/2 + rightPylon.size.height)
         rightPylon.resetY = size.height + rightPylon.size.height
         rightPylon.minLeft = leftMargin + racer.size.width * 2
         rightPylon.maxRight = leftMargin + playableWidth - racer.size.width * 2
+        rightPylon.screenSize = size.height
         addChild(rightPylon)
 
 //        print(size.height)
 
-        speedometer.position = CGPoint(x: leftMargin + playableWidth/2, y: size.height*7/8)
-        speedometer.fontColor = UIColor.black
-        speedometer.fontSize = size.height * 0.05
-//        speedometer.text = "100"
-        addChild(speedometer)
+        // HUD (UI)
+        addChild(yoke)
+        tilt.fillColor = UIColor(red: 0, green: 0, blue: 0.8, alpha: 0.2)
+        addChild(tilt)
+
+        ruddderIndicator.position.x = size.width/2
+        ruddderIndicator.position.y = 0
+        addChild(ruddderIndicator)
+        rudderStopLeft.position.x = leftMargin + playableWidth * 0.1
+        rudderStopLeft.position.y = 0
+        addChild(rudderStopLeft)
+        rudderStopRight.position.x = leftMargin + playableWidth * 0.9
+        rudderStopRight.position.y = 0
+        addChild(rudderStopRight)
+
+        throttleIndicator.position.x = leftMargin
+        throttleIndicator.position.y = size.height/2
+        addChild(throttleIndicator)
+        throttleStopFull.position.x = leftMargin
+        throttleStopFull.position.y = size.height * 0.9
+        addChild(throttleStopFull)
+        throttleStopIdle.position.x = leftMargin
+        throttleStopIdle.position.y = size.height * 0.1
+        addChild(throttleStopIdle)
+
+        speedometerLabel.text = "100 mph"
+        speedometerLabel.fontSize = size.height * 0.05
+        speedometerLabel.horizontalAlignmentMode = .right
+        print("Size \(speedometerLabel.frame.width)")
+        speedometerLabel.position = CGPoint(x: leftMargin + speedometerLabel.frame.width * 1.2, y: size.height - 2 * speedometerLabel.fontSize)
+        speedometerLabel.fontColor = UIColor.black
+        addChild(speedometerLabel)
+
+        pylonCountLabel.text = "\(pylonsRemaining) pylons to go"
+        pylonCountLabel.fontSize = size.height * 0.03
+        // TODO - make fonts bolder
+        pylonCountLabel.horizontalAlignmentMode = .right
+        pylonCountLabel.position = CGPoint(x: speedometerLabel.position.x, y: speedometerLabel.position.y - pylonCountLabel.fontSize * 1.5)
+        pylonCountLabel.fontColor = UIColor.black
+        addChild(pylonCountLabel)
+
+        pylonMissLabel.text = "\(pylonsMissed) missed"
+        pylonMissLabel.fontSize = size.height * 0.03
+        pylonMissLabel.horizontalAlignmentMode = .right
+        pylonMissLabel.position = CGPoint(x: speedometerLabel.position.x, y: pylonCountLabel.position.y - pylonMissLabel.fontSize * 1.5)
+        pylonMissLabel.fontColor = UIColor.black
+        addChild(pylonMissLabel)
+
+        elapsedTimeLabel.text = "5:00"
+        elapsedTimeLabel.fontSize = size.height * 0.05
+        elapsedTimeLabel.horizontalAlignmentMode = .right
+        elapsedTimeLabel.position = CGPoint(x: leftMargin + playableWidth - elapsedTimeLabel.fontSize, y: size.height - 2 * elapsedTimeLabel.fontSize)
+        elapsedTimeLabel.fontColor = UIColor.black
+        addChild(elapsedTimeLabel)
+
     }
 
     override func update(_ currentTime: TimeInterval) {
         // Called before each frame is rendered
 
-        // delta-t
+        // Step 1: computer delta-t
         if lastUpdateTime > 0 {
             dt = currentTime - lastUpdateTime
         } else {
@@ -150,37 +213,57 @@ class GameScene: SKScene {
         }
         lastUpdateTime = currentTime
 
-        // control
+        // Step 2: determine control input
 //        yoke.position = lastTouch
         #if targetEnvironment(simulator)
             yoke.position = lastTouch
+            // simulator uses touches, while device uses accelerometer
         #else
-        if let accelerometerData = motionManager.accelerometerData {
-//            print("pitch: \(CGFloat(accelerometerData.acceleration.y)) roll: \(CGFloat(accelerometerData.acceleration.x))")
-            tilt.position.x = size.width/2 + CGFloat(accelerometerData.acceleration.x) * size.width / 2
-                // changed from 3 to 2, makes less tilt yield full side yoke
-            tilt.position.y = size.height/3 + CGFloat(accelerometerData.acceleration.y + 0.5) * size.height / 3
-        }
+            if let accelerometerData = motionManager.accelerometerData {
+//                print("pitch: \(CGFloat(accelerometerData.acceleration.y)) roll: \(CGFloat(accelerometerData.acceleration.x))")
+                tilt.position.x = size.width/2 + CGFloat(accelerometerData.acceleration.x) * size.width / 2
+                    // changed from 3 to 2, makes less tilt yield full side yoke
 
-        // min/max keeps yoke within limits of the screen
-        yoke.position.x = min(leftMargin + playableWidth - 30, max(leftMargin + 30, (tilt.position.x + 2 * previousYoke.x ) / 3))
+                tilt.position.y = size.height/2 + CGFloat(accelerometerData.acceleration.y + 0.5) * size.height / 2
+                print("tilt.y: \(CGFloat(accelerometerData.acceleration.y)) \tyields position.y of: \(tilt.position.y)")
+                // I want the tilt of -0.6 (full) to -0.75 to -0.9 (idle) to be the full range of
+                //      200 to size.height/2
+            }
 
-
-        yoke.position.y = (tilt.position.y + 2 * previousYoke.y ) / 3
-        previousYoke = yoke.position
         // This was trying to get tilt and roll from the gyro instead of the accelerometer.
-//        if let gyroData = motionManager.gyroData {
-//            let roll = gyroData.attitude.roll
-//            print(roll)
-//        }
+        //        if let gyroData = motionManager.gyroData {
+        //            let roll = gyroData.attitude.roll
+        //            print(roll)
+        //        }
+
+            // min/max keeps yoke within limits of the screen
+            yoke.position.x = limit((tilt.position.x + 2 * previousYoke.x ) / 3,        // this is weighting 2*previous vs tilt
+                                    betweenMin: leftMargin + 60,
+                                    andMax: leftMargin + playableWidth - 60)
+
+    //            yoke.position.x = min(leftMargin + playableWidth - 30, max(leftMargin + 30, (tilt.position.x + 2 * previousYoke.x ) / 3))
+
+            yoke.position.y = (tilt.position.y + 2 * previousYoke.y ) / 3
+
+            previousYoke = yoke.position
+
+
         #endif
 
         // TODO - change all of these 100, 200 numbers to percentages of the screen height
         // throttle based on touch.y
 //        racer.throttle = min(max((yoke.position.y - 200), 0), 400) / 400
-        racer.throttle = min(max(yoke.position.y / (size.height/2), 0.10), 1.0)
-        newThrottle = 100 * min(max(yoke.position.y / (size.height/2), 0.10), 1.0)  // ranges 10 to 100
+//        racer.throttle = min(max(yoke.position.y / (size.height/2), 0.10), 1.0)
+        racer.throttle = limit((yoke.position.y - 200) / (size.height/2 - 200),
+                            betweenMin: 0.00, andMax: 1.0)
+        newThrottle = 100 * limit((yoke.position.y - 200) / (size.height/2 - 200),
+                            betweenMin: 0.10, andMax: 1.0)  // ranges 10 (at 200 pix) to 100 (at about 768)
+
+        // the 200 is a pad at the bottom of the screen
+
         // move airspeed towards throttle
+        throttleIndicator.position.y = size.height * 0.8 * racer.throttle + size.height * 0.1
+//        print(racer.throttle)
 
 //        print("touch.y: \(lastTouch.y) yields throttle of \(racer.throttle) and the airspeed is now \(airspeedPointsPerSec.y)")
 
@@ -194,10 +277,14 @@ class GameScene: SKScene {
         }
 
 
-        newDrag = pow(newAirspeed, 2) / 2000
+        newDrag = pow(newAirspeed, 2) / 1000        // changed form 2000 to 1000 to increase decelleration rate
 
-        //        print("Throttle: \(newThrottle)\tAirspeed: \(newAirspeed)\tDrag: \(newDrag)")  // ranges from about 0.1 to 1.0 (bottom of screen to middle)
-        newAirspeed += (newThrottle - newDrag) / 50
+        // TODO - need to actually set a minPower value, so 0 throttle + draggy turns doesn't make plane drop off bottom of the screen.
+
+//                print("Throttle: \(newThrottle)\tAirspeed: \(newAirspeed)\tDrag: \(newDrag)")  // ranges from about 0.1 to 1.0 (bottom of screen to middle)
+        newAirspeed += (newThrottle + 10 - newDrag) / 50        // the + 10 is a see bit of power at 0% throttle
+
+
 
         // python version also has a line to add extra drag based on dx
 //        newAirspeed -= abs(newVelocity.x) / 5
@@ -319,13 +406,25 @@ class GameScene: SKScene {
         // TODO - position.y needs to be based on something different.
         //      At the present, as you throttle down, the plane visually moves backwards compared to the background landscape.
 
-        racerShadow.position.x = racer.position.x + 40
-        racerShadow.position.y = racer.position.y - 40
+        // TODO - At minimum speed/throttle, turns can make the plane drop off bottom of the screen.
+        // Maybe we need to implement a cameraNode that tracks somehow tracks racer.position.y
+
+        // ADJUST ALTITUDE:
+            // this is just a crude, direct proportion means of setting altitude.
+            // I would rather have it gain gradually, and lose altitude slowly on banks and throttle-downs
+        racer.altitude = Int(newAirspeed / 20) + 4
+//        print(racer.altitude)
+            // could also make altitude effect zPosition, but that might be confusing.
+            // ? but, might not? As pitching forward would indeed dive AND increase speed ??
+
+        racerShadow.position.x = racer.position.x + 4 * CGFloat(racer.altitude)
+        racerShadow.position.y = racer.position.y - 4 * CGFloat(racer.altitude)
 
         distanceThisUpdate = 3 * airspeedPointsPerSec.y * CGFloat(dt)
 
         // move landscape
-        landscape.position.y = landscape.position.y - newVelocity.y
+        landscape.position.y -= newVelocity.y
+//        print("delta y: \(newVelocity.y) pix")
         if landscape.position.y <= -landscape.size.height/2 {
             landscape.position.y -= landscape.position.y
 //            print("background reset")
@@ -361,10 +460,19 @@ class GameScene: SKScene {
         cloudShadow.position.y = cloud.position.y - 100
 
         // update Pylons
-        leftPylon.update(by: newVelocity.y, otherPylonX: rightPylon.position.x, racerAt: racer.position)
-        rightPylon.update(by: newVelocity.y, otherPylonX: leftPylon.position.x, racerAt: racer.position)
+        leftJudge = leftPylon.update(by: newVelocity.y, otherPylon: rightPylon.position, racerAt: racer.position)
+        rightJudge = rightPylon.update(by: newVelocity.y, otherPylon: leftPylon.position, racerAt: racer.position)
 
-        speedometer.text = String("\(Int(newAirspeed)) mph")
+        if leftJudge == "GOOD" || rightJudge == "GOOD" {
+            pylonsRemaining -= 1
+        } else if leftJudge == "MISS" || rightJudge == "MISS" {
+            pylonsRemaining -= 1
+            pylonsMissed += 1
+        }
+
+        speedometerLabel.text = String("\(Int(newAirspeed)) mph")
+        pylonCountLabel.text = String("\(pylonsRemaining) pylons to go")
+        pylonMissLabel.text = String("\(pylonsMissed) missed")
     }
 
     func move(sprite: SKSpriteNode, airspeed: CGPoint) {
@@ -436,5 +544,6 @@ class GameScene: SKScene {
 //    }
 //
 //
+
 
 }

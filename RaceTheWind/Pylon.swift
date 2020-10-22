@@ -16,10 +16,14 @@ class Pylon: SKSpriteNode {
         case right
     }
 
-    var resetY: CGFloat = 0
+    var resetY: CGFloat = 0         // I don't think I use this anymore, using screenSize var instead
     var minLeft: CGFloat = 0
     var maxRight: CGFloat = 0
+    var screenSize: CGFloat = 0
+
     var isPassed: Bool = false
+    var isFirstPylon: Bool = false              // TODO - will be used to start timer
+    var isLastPylon: Bool = false               // TODO - will be used to change texture, stop timer, end game, stop pylon respawning
 
     init(side: Side) {
         let texture: SKTexture
@@ -45,19 +49,21 @@ class Pylon: SKSpriteNode {
         fatalError("Use init()")
     }
 
-    func update(by distanceThisUpdate: CGFloat, otherPylonX: CGFloat,  racerAt: CGPoint) {
+    func update(by distanceThisUpdate: CGFloat, otherPylon: CGPoint,  racerAt: CGPoint) -> String {
+        // returns true if a pylon has been passed
+
         if position.y <= 0 - size.height {
             // then move back to top of screen
-            position.y = resetY
+//            position.y = resetY
+            position.y = otherPylon.y + screenSize * 0.6        // this gives more consistent spacing regardless of speeds
             isPassed = false
-
 
             // ...and random x
             if name == "left" {
-                position.x = CGFloat.random(in: (minLeft) ... (otherPylonX + 50))
+                position.x = CGFloat.random(in: (minLeft) ... (otherPylon.x + 50))
                 texture = SKTexture(imageNamed: "pylon_L")
             } else {
-                position.x = CGFloat.random(in: (min(maxRight - 100, otherPylonX - 50)) ... (maxRight))
+                position.x = CGFloat.random(in: (min(maxRight - 100, otherPylon.x - 50)) ... (maxRight))
                 texture = SKTexture(imageNamed: "pylon_R")
             }
             // TODO - there is an occasional error, I think when the otherPylonX value is beyond the min/max value
@@ -75,10 +81,14 @@ class Pylon: SKSpriteNode {
             if (name == "left" && racerAt.x < position.x) || (name == "right" && racerAt.x > position.x) {
                 texture = SKTexture(imageNamed: "pylon_OK")
                 // play a "GOOD" sound?
+                return "GOOD"
             } else {
                 texture = SKTexture(imageNamed: "pylon_MISS")
                 // play a "MISS" sound!
+                return "MISS"
             }
+        } else {
+            return ""
         }
     }
     
