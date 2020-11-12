@@ -5,13 +5,14 @@
 //  Created by Patrick Wheeler on 12/24/19.
 //  Copyright © 2019 Patrick Wheeler. All rights reserved.
 /*
-    Race The Wind is a port from Python to Swift/iOS of a simple air racing slalom game that I built for CIS151.
-    Loosely inspired byan old Atari 2600 game of air racing slalom called Sky Jinks.
+    Race The Wind is a port of a simple air racing slalom game that I built for CIS151 from Python to Swift/iOS.
+    Loosely inspired by an old Atari 2600 game of air racing slalom called Sky Jinks.
  */
 
 import SpriteKit
 import CoreGraphics
 import CoreMotion
+import AVFoundation
 
 class GameScene: SKScene {
 
@@ -24,8 +25,22 @@ class GameScene: SKScene {
     let elapsedTimeLabel: SKLabelNode = SKLabelNode()
     let bestTimeLabel: SKLabelNode = SKLabelNode()
 
+    // subclass of SKLabelNode that can easily detect touches.
+    let gameplayButton: TouchLabelNode = TouchLabelNode(text: "TAP TO BEGIN")
+
     var lastUpdateTime: TimeInterval = 0
     var dt: TimeInterval = 0
+
+    var startTime: TimeInterval = 0             // for run timing
+    var currentTime: TimeInterval = 0
+    var elapsedRunTime: TimeInterval = 0
+
+    var isInitiallyPaused: Bool = true
+    var clockIsRunning: Bool = false
+    var pylonsAreRunning: Bool = false
+    var didPassFirstPylon: Bool = false
+    var didPassLastPylon: Bool = false
+
     var airspeedPointsPerSec: CGPoint = CGPoint(x: 0, y: 200.0)
     var distanceThisUpdate: CGFloat = 0
 
@@ -65,7 +80,10 @@ class GameScene: SKScene {
     let throttleStopFull = SKShapeNode(rect: CGRect(x: 0, y: 0, width: 20, height: 10), cornerRadius: 2)
     let throttleStopIdle = SKShapeNode(rect: CGRect(x: 0, y: 0, width: 20, height: 10), cornerRadius: 2)
 
+
     var motionManager: CMMotionManager!
+
+
 
 
     override init(size: CGSize) {
@@ -84,6 +102,7 @@ class GameScene: SKScene {
 
         lastTouch = CGPoint(x: size.width/2, y: 200)
         previousYoke = lastTouch
+
 
 
         super.init(size: size)
@@ -134,6 +153,7 @@ class GameScene: SKScene {
         leftPylon.minLeft = leftMargin + racer.size.width * 2
         leftPylon.maxRight = leftMargin + playableWidth - racer.size.width * 2
         leftPylon.screenSize = size.height
+        leftPylon.number = pylonsRemaining
         addChild(leftPylon)
 
         rightPylon.position = CGPoint(x: leftMargin + playableWidth * 7/8, y: leftPylon.position.y + size.height/2 + rightPylon.size.height)
@@ -141,6 +161,7 @@ class GameScene: SKScene {
         rightPylon.minLeft = leftMargin + racer.size.width * 2
         rightPylon.maxRight = leftMargin + playableWidth - racer.size.width * 2
         rightPylon.screenSize = size.height
+        rightPylon.number = pylonsRemaining - 1
         addChild(rightPylon)
 
 //        print(size.height)
@@ -170,6 +191,22 @@ class GameScene: SKScene {
         throttleStopIdle.position.y = size.height * 0.1
         addChild(throttleStopIdle)
 
+        //        for family in UIFont.familyNames.sorted() {
+        //            let names = UIFont.fontNames(forFamilyName: family)
+        //            print("Family: \(family) Font names: \(names)")
+        //        }
+
+        // NovaMono
+        // https://fonts.google.com/specimen/Nova+Mono?category=Monospace&preview.text=12:45&preview.text_type=custom#license
+
+//        guard let customFont = UIFont(name: "NovaMono", size: UIFont.labelFontSize) else {
+//            fatalError("""
+//                Failed to load the "NovaMono" font.
+//                Make sure the font file is included in the project and the font name is spelled correctly.
+//                """
+//            )
+//        }
+
         speedometerLabel.text = "100 mph"
         speedometerLabel.fontSize = size.height * 0.05
         speedometerLabel.horizontalAlignmentMode = .right
@@ -194,16 +231,44 @@ class GameScene: SKScene {
         addChild(pylonMissLabel)
 
         elapsedTimeLabel.text = "5:00"
+        elapsedTimeLabel.fontName = "NovaMono"
         elapsedTimeLabel.fontSize = size.height * 0.05
         elapsedTimeLabel.horizontalAlignmentMode = .right
         elapsedTimeLabel.position = CGPoint(x: leftMargin + playableWidth - elapsedTimeLabel.fontSize, y: size.height - 2 * elapsedTimeLabel.fontSize)
         elapsedTimeLabel.fontColor = UIColor.black
         addChild(elapsedTimeLabel)
 
+        gameplayButton.fontName = "NovaMono"
+        gameplayButton.horizontalAlignmentMode = .center
+//        gameplayButton.position = CGPoint(x: leftMargin + playableWidth / 2, y: gameplayButton.fontSize * 4)
+        gameplayButton.position = CGPoint(x: leftMargin + playableWidth / 2, y: size.height / 2)
+        gameplayButton.zPosition = 51
+        gameplayButton.fontColor = UIColor.black
+//        gameplayButton.isHidden = true
+        addChild(gameplayButton)
+
+
+
     }
 
     override func update(_ currentTime: TimeInterval) {
         // Called before each frame is rendered
+
+        // start/reset button
+        if gameplayButton.wasTouched == true {
+            print("Button has been touched")
+            gameplayButton.wasTouched = false
+
+            if isInitiallyPaused {
+                print("Start game")
+                isInitiallyPaused = false
+                gameplayButton.isHidden = true
+                pylonsAreRunning = true
+                print("  Start pylons")
+            } else {
+                resetGame()
+            }
+        }
 
         // Step 1: computer delta-t
         if lastUpdateTime > 0 {
@@ -460,19 +525,54 @@ class GameScene: SKScene {
         cloudShadow.position.y = cloud.position.y - 100
 
         // update Pylons
-        leftJudge = leftPylon.update(by: newVelocity.y, otherPylon: rightPylon.position, racerAt: racer.position)
-        rightJudge = rightPylon.update(by: newVelocity.y, otherPylon: leftPylon.position, racerAt: racer.position)
+        if pylonsAreRunning {
+            leftJudge = leftPylon.update(by: newVelocity.y, otherPylon: rightPylon.position, racerAt: racer.position)
+            rightJudge = rightPylon.update(by: newVelocity.y, otherPylon: leftPylon.position, racerAt: racer.position)
 
-        if leftJudge == "GOOD" || rightJudge == "GOOD" {
-            pylonsRemaining -= 1
-        } else if leftJudge == "MISS" || rightJudge == "MISS" {
-            pylonsRemaining -= 1
-            pylonsMissed += 1
+            if leftJudge == "GOOD" || rightJudge == "GOOD" {
+                if !didPassFirstPylon {
+                    didPassFirstPylon = true
+                    startTime = currentTime
+    //                print(startTime)
+                }
+                if !didPassLastPylon {
+                    pylonsRemaining -= 1
+                }
+            } else if leftJudge == "MISS" || rightJudge == "MISS" {
+                if !didPassFirstPylon {
+                    didPassFirstPylon = true
+                    startTime = currentTime
+    //                print(startTime)
+                }
+                if !didPassLastPylon {
+                    pylonsRemaining -= 1
+                    pylonsMissed += 1
+                }
+            }
+
+            if pylonsRemaining <= 0 {
+                didPassLastPylon = true
+            }
+
+    //        print("current time: \(currentTime)")
+            if didPassFirstPylon && !didPassLastPylon {
+                elapsedRunTime = ( currentTime - startTime )
+            } else if didPassFirstPylon && didPassLastPylon {
+                // game over
+                clockIsRunning = false
+                gameplayButton.text = "TAP TO RESET"
+                gameplayButton.isHidden = false
+            }
+    //        print("elapsed run time: \(elapsedRunTime)")
         }
 
         speedometerLabel.text = String("\(Int(newAirspeed)) mph")
         pylonCountLabel.text = String("\(pylonsRemaining) pylons to go")
         pylonMissLabel.text = String("\(pylonsMissed) missed")
+
+        elapsedTimeLabel.text = String(format: "%.02f", elapsedRunTime)
+        // TODO - there are still times when the digits wiggle
+
     }
 
     func move(sprite: SKSpriteNode, airspeed: CGPoint) {
@@ -545,5 +645,7 @@ class GameScene: SKScene {
 //
 //
 
-
+    func resetGame() {
+        print("Game Reset!")
+    }
 }

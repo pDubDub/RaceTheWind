@@ -21,9 +21,13 @@ class Pylon: SKSpriteNode {
     var maxRight: CGFloat = 0
     var screenSize: CGFloat = 0
 
+    var number: Int = 0
+
     var isPassed: Bool = false
     var isFirstPylon: Bool = false              // TODO - will be used to start timer
     var isLastPylon: Bool = false               // TODO - will be used to change texture, stop timer, end game, stop pylon respawning
+
+    let flybySound: SKAction = SKAction.playSoundFileNamed("s6b_pass.caf", waitForCompletion: false)
 
     init(side: Side) {
         let texture: SKTexture
@@ -49,35 +53,52 @@ class Pylon: SKSpriteNode {
         fatalError("Use init()")
     }
 
+    /// To be run each frame by GameScene. Resets pylons to top of screen. Updates position each frame. Responds to racer passing pylons.
+    /// - Parameters:
+    ///   - distanceThisUpdate: How many pixels the background moves this frame/update.
+    ///   - otherPylon: The location of the other pylon, to determine range of restart x locations.
+    ///   - racerAt: The location of the racer, to determine if and how the racer passes a pylon.
+    /// - Returns:
+    ///   - returns string "GOOD" or "MISS" when a pylon is passed.
     func update(by distanceThisUpdate: CGFloat, otherPylon: CGPoint,  racerAt: CGPoint) -> String {
-        // returns true if a pylon has been passed
 
-        if position.y <= 0 - size.height {
-            // then move back to top of screen
-//            position.y = resetY
-            position.y = otherPylon.y + screenSize * 0.6        // this gives more consistent spacing regardless of speeds
-            isPassed = false
+        if (name == "left" && number >= 2) || (name == "right" && number >= 1) {
+            if position.y <= 0 - size.height {
+                // then move back to top of screen
+    //            position.y = resetY
+                position.y = otherPylon.y + screenSize * 0.6        // this gives more consistent spacing regardless of speeds
+                isPassed = false
 
-            // ...and random x
-            if name == "left" {
-                position.x = CGFloat.random(in: (minLeft) ... (otherPylon.x + 50))
-                texture = SKTexture(imageNamed: "pylon_L")
-            } else {
-                position.x = CGFloat.random(in: (min(maxRight - 100, otherPylon.x - 50)) ... (maxRight))
-                texture = SKTexture(imageNamed: "pylon_R")
+                // ...and random x
+                if name == "left" {
+                    position.x = CGFloat.random(in: (minLeft) ... (otherPylon.x + 50))
+                    texture = SKTexture(imageNamed: "pylon_L")
+                } else {
+                    position.x = CGFloat.random(in: (min(maxRight - 100, otherPylon.x - 50)) ... (maxRight))
+                    texture = SKTexture(imageNamed: "pylon_R")
+                }
+                // TODO - there is an occasional error, I think when the otherPylonX value is beyond the min/max value
+
+                // then decerement the pylon number
+
+                // if pylon number is 1, then set texture to END
+
+                print("Reseting the \(String(describing: self.name)) pylon is number \(number)")
             }
-            // TODO - there is an occasional error, I think when the otherPylonX value is beyond the min/max value
-
-            // then decerement the pylon number
-
-            // if pylon number is 1, then set texture to END
         }
         position.y = position.y - distanceThisUpdate
 
         // add pass detection
         if !isPassed && position.y < racerAt.y {
+            print("Passed pylon \(number)")
             isPassed = true
             // play flyby sound
+            run(flybySound)
+            // TODO - might be really cool if we could alter sound a little based on speed and how close you pass to the pylon
+
+            number -= 2
+
+            // change textures and return string for scoring
             if (name == "left" && racerAt.x < position.x) || (name == "right" && racerAt.x > position.x) {
                 texture = SKTexture(imageNamed: "pylon_OK")
                 // play a "GOOD" sound?
