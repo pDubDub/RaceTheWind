@@ -22,8 +22,10 @@ class GameScene: SKScene {
     let speedometerLabel: SKLabelNode = SKLabelNode()
     let pylonCountLabel: SKLabelNode = SKLabelNode()
     let pylonMissLabel:SKLabelNode = SKLabelNode()
-    let elapsedTimeLabel: SKLabelNode = SKLabelNode()
+
     let bestTimeLabel: SKLabelNode = SKLabelNode()
+    let elapsedTimeLabel: SKLabelNode = SKLabelNode()
+    let differenceLabel: SKLabelNode = SKLabelNode()
 
     // subclass of SKLabelNode that can easily detect touches.
     let gameplayButton: TouchLabelNode = TouchLabelNode(text: "TAP TO BEGIN")
@@ -34,6 +36,7 @@ class GameScene: SKScene {
     var startTime: TimeInterval = 0             // for run timing
     var currentTime: TimeInterval = 0
     var elapsedRunTime: TimeInterval = 0
+    var bestTime: TimeInterval = 0
 
     var isInitiallyPaused: Bool = true
     var clockIsRunning: Bool = false
@@ -208,35 +211,54 @@ class GameScene: SKScene {
 //        }
 
         speedometerLabel.text = "100 mph"
-        speedometerLabel.fontSize = size.height * 0.05
+        speedometerLabel.fontName = "NovaMono"
+        speedometerLabel.fontSize = size.height * 0.03
         speedometerLabel.horizontalAlignmentMode = .right
         print("Size \(speedometerLabel.frame.width)")
-        speedometerLabel.position = CGPoint(x: leftMargin + speedometerLabel.frame.width * 1.2, y: size.height - 2 * speedometerLabel.fontSize)
-        speedometerLabel.fontColor = UIColor.black
+        speedometerLabel.position = CGPoint(x: leftMargin + speedometerLabel.frame.width * 1.2, y: 2 * speedometerLabel.fontSize)
+        speedometerLabel.fontColor = UIColor.white
         addChild(speedometerLabel)
 
         pylonCountLabel.text = "\(pylonsRemaining) pylons to go"
         pylonCountLabel.fontSize = size.height * 0.03
         // TODO - make fonts bolder
         pylonCountLabel.horizontalAlignmentMode = .right
-        pylonCountLabel.position = CGPoint(x: speedometerLabel.position.x, y: speedometerLabel.position.y - pylonCountLabel.fontSize * 1.5)
-        pylonCountLabel.fontColor = UIColor.black
+        pylonCountLabel.position = CGPoint(x: leftMargin + pylonCountLabel.frame.width * 1.2, y: size.height - 1.5 * pylonCountLabel.fontSize)
+        pylonCountLabel.fontColor = UIColor.white
         addChild(pylonCountLabel)
 
         pylonMissLabel.text = "\(pylonsMissed) missed"
         pylonMissLabel.fontSize = size.height * 0.03
         pylonMissLabel.horizontalAlignmentMode = .right
-        pylonMissLabel.position = CGPoint(x: speedometerLabel.position.x, y: pylonCountLabel.position.y - pylonMissLabel.fontSize * 1.5)
-        pylonMissLabel.fontColor = UIColor.black
+        pylonMissLabel.position = CGPoint(x: pylonCountLabel.position.x, y: pylonCountLabel.position.y - pylonMissLabel.fontSize * 1.5)
+        pylonMissLabel.fontColor = UIColor.white
+
         addChild(pylonMissLabel)
+
+        // time labels
+        bestTimeLabel.text = "Best 00:00"
+        bestTimeLabel.fontName = "NovaMono"
+        bestTimeLabel.fontSize = size.height * 0.04
+        bestTimeLabel.horizontalAlignmentMode = .right
+        bestTimeLabel.position = CGPoint(x: leftMargin + playableWidth - bestTimeLabel.fontSize, y: size.height - 1 * bestTimeLabel.fontSize)
+        bestTimeLabel.fontColor = UIColor.white
+        addChild(bestTimeLabel)
 
         elapsedTimeLabel.text = "5:00"
         elapsedTimeLabel.fontName = "NovaMono"
         elapsedTimeLabel.fontSize = size.height * 0.05
         elapsedTimeLabel.horizontalAlignmentMode = .right
-        elapsedTimeLabel.position = CGPoint(x: leftMargin + playableWidth - elapsedTimeLabel.fontSize, y: size.height - 2 * elapsedTimeLabel.fontSize)
-        elapsedTimeLabel.fontColor = UIColor.black
+        elapsedTimeLabel.position = CGPoint(x: bestTimeLabel.position.x, y: bestTimeLabel.position.y - elapsedTimeLabel.fontSize)
+        elapsedTimeLabel.fontColor = UIColor.white
         addChild(elapsedTimeLabel)
+
+        differenceLabel.text = "(+0:00)"
+        differenceLabel.fontName = "NovaMono"
+        differenceLabel.fontSize = size.height * 0.03
+        differenceLabel.horizontalAlignmentMode = .right
+        differenceLabel.position = CGPoint(x: bestTimeLabel.position.x, y: elapsedTimeLabel.position.y - 1.2 * differenceLabel.fontSize)
+        differenceLabel.fontColor = UIColor.white
+        addChild(differenceLabel)
 
         gameplayButton.fontName = "NovaMono"
         gameplayButton.horizontalAlignmentMode = .center
@@ -556,12 +578,32 @@ class GameScene: SKScene {
 
     //        print("current time: \(currentTime)")
             if didPassFirstPylon && !didPassLastPylon {
-                elapsedRunTime = ( currentTime - startTime )
-            } else if didPassFirstPylon && didPassLastPylon {
+                elapsedRunTime = ( currentTime - startTime ) + Double((pylonsMissed * 5))        // (or whatever the penalty will be)
+           } else if didPassFirstPylon && didPassLastPylon && clockIsRunning {
                 // game over
                 clockIsRunning = false
                 gameplayButton.text = "TAP TO RESET"
                 gameplayButton.isHidden = false
+
+                /*  List of Python END OF GAME actions:
+                        √   clock_is_running = False
+                        Fade out the engine sounds
+                                plane.engine_sound_low.fadeout(8000)
+                                plane.engine_sound_high.fadeout(400)
+                        Should also reset and maybe land the plane?
+                                stop listening to controls?
+                                return to center
+                                drop throttle to 0
+                        if bestTime = 0 then there is no previous best and we can skip setting timeDifference
+                                else set timeDifference = elapsedRunTime - bestTime
+                        # if this run was the best time...
+                        if elapsedRunTime < bestTime or bestTime == 0:
+                                bestTime = elapsedRunTime
+                                # save_best_time(bestTime)
+                                # new score class object
+                                high_scores.scores_dictionary[str(difficulty_setting * 100 + starting_num_pylons)] = bestTime
+                        */
+
             }
     //        print("elapsed run time: \(elapsedRunTime)")
         }
@@ -572,6 +614,8 @@ class GameScene: SKScene {
 
         elapsedTimeLabel.text = String(format: "%.02f", elapsedRunTime)
         // TODO - there are still times when the digits wiggle
+
+
 
     }
 
