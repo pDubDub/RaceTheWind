@@ -27,8 +27,11 @@ class GameScene: SKScene {
     let elapsedTimeLabel: SKLabelNode = SKLabelNode()
     let differenceLabel: SKLabelNode = SKLabelNode()
 
+    var gameplayButton: TouchableButtonNode = TouchableButtonNode()
     // subclass of SKLabelNode that can easily detect touches.
-    let gameplayButton: TouchLabelNode = TouchLabelNode(text: "TAP HERE TO BEGIN")
+//    let gameplayButtonLabel: TouchLabelNode = TouchLabelNode(text: "TAP HERE TO BEGIN")
+    let gameplayButtonLabel: SKLabelNode = SKLabelNode(text: "TAP HERE TO BEGIN")
+    let finishLine: SKTexture = SKTexture(imageNamed: "checker")
 
     var lastUpdateTime: TimeInterval = 0
     var dt: TimeInterval = 0
@@ -131,11 +134,14 @@ class GameScene: SKScene {
 
 //        racer.anchorPoint = CGPoint(x: 0.5, y: 0.5)
         racer.position = CGPoint(x: size.width/2, y: lastTouch.y + airspeedPointsPerSec.y)
-//        racer.scale(to: CGSize(width: 2.0, height: 2.0))          // seems to make sprite just disappear
+        racer.scale(to: CGSize(width: 100 * (playableWidth / 600), height: 72 * (playableWidth / 600)))
+            // TODO - should factor out this scaling function, so that we can apply it to everything.
+            // Or perhaps we just move the camera node closer?
         addChild(racer)
 
         racerShadow.position.x = racer.position.x + 40
         racerShadow.position.y = racer.position.y - 40
+        racerShadow.scale(to: CGSize(width: 100 * (playableWidth / 600), height: 72 * (playableWidth / 600)))
         addChild(racerShadow)
 
         // cloud setup
@@ -216,65 +222,71 @@ class GameScene: SKScene {
         bestTimeLabel.text = "Best --:--"
         bestTimeLabel.fontName = "NovaMono"
         bestTimeLabel.fontSize = size.height * 0.03
+        bestTimeLabel.fontColor = UIColor.white
         bestTimeLabel.horizontalAlignmentMode = .left
         bestTimeLabel.position = CGPoint(x: leftMargin + 0.5 * bestTimeLabel.fontSize, y: size.height - 1.5 * bestTimeLabel.fontSize)
-        bestTimeLabel.fontColor = UIColor.white
         addChild(bestTimeLabel)
 
         elapsedTimeLabel.text = "5:00"
         elapsedTimeLabel.fontName = "NovaMono"
         elapsedTimeLabel.fontSize = size.height * 0.05
+        elapsedTimeLabel.fontColor = UIColor.white
         elapsedTimeLabel.horizontalAlignmentMode = .right
         elapsedTimeLabel.position = CGPoint(x: bestTimeLabel.position.x + bestTimeLabel.frame.width, y: bestTimeLabel.position.y - elapsedTimeLabel.fontSize)
-        elapsedTimeLabel.fontColor = UIColor.white
         addChild(elapsedTimeLabel)
 
         differenceLabel.text = "(+0:00)"
         differenceLabel.fontName = "NovaMono"
         differenceLabel.fontSize = size.height * 0.03
+        differenceLabel.fontColor = UIColor.white
         differenceLabel.horizontalAlignmentMode = .right
         differenceLabel.position = CGPoint(x: elapsedTimeLabel.position.x, y: elapsedTimeLabel.position.y - 1.2 * differenceLabel.fontSize)
-        differenceLabel.fontColor = UIColor.white
         differenceLabel.isHidden = true
         addChild(differenceLabel)
 
         speedometerLabel.text = "100 mph"
         speedometerLabel.fontName = "NovaMono"
         speedometerLabel.fontSize = size.height * 0.03
+        speedometerLabel.fontColor = UIColor.white
         speedometerLabel.horizontalAlignmentMode = .right
         print("Size \(speedometerLabel.frame.width)")
         speedometerLabel.position = CGPoint(x: leftMargin + playableWidth - speedometerLabel.fontSize, y: 1.5 * speedometerLabel.fontSize)
-        speedometerLabel.fontColor = UIColor.white
         addChild(speedometerLabel)
 
         pylonCountLabel.text = "\(pylonsRemaining) pylons to go"
         pylonCountLabel.fontName = "NovaMono"
         pylonCountLabel.fontSize = size.height * 0.03
+        pylonCountLabel.fontColor = UIColor.white
         pylonCountLabel.horizontalAlignmentMode = .right
         pylonCountLabel.position = CGPoint(x: leftMargin + playableWidth - pylonCountLabel.fontSize, y: bestTimeLabel.position.y)
-        pylonCountLabel.fontColor = UIColor.white
         addChild(pylonCountLabel)
 
         pylonMissLabel.text = "\(pylonsMissed) missed"
         pylonMissLabel.fontName = "NovaMono"
         pylonMissLabel.fontSize = size.height * 0.03
+        pylonMissLabel.fontColor = UIColor.white
         pylonMissLabel.horizontalAlignmentMode = .right
         pylonMissLabel.position = CGPoint(x: pylonCountLabel.position.x, y: pylonCountLabel.position.y - 1.5 * pylonMissLabel.fontSize)
-        pylonMissLabel.fontColor = UIColor.white
         addChild(pylonMissLabel)
 
+//        gameplayButton = TouchableButtonNode(rect: CGRect(x: 0, y: 0, width: rightPylon.frame.height * 16 , height: rightPylon.frame.height), cornerRadius: 20)
+        gameplayButton = TouchableButtonNode(rect: CGRect(x: 0, y: 0, width: playableWidth * 0.8, height: rightPylon.frame.height), cornerRadius: 20)
+        gameplayButton.position = CGPoint(x: leftMargin + playableWidth / 2 - gameplayButton.frame.width / 2,
+                                      y: size.height / 5)
+        gameplayButton.zPosition = 1
+//        gameplayButton.fillColor = UIColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 0.5)
+        gameplayButton.fillColor = UIColor(red: 0.5, green: 0.5, blue: 1.0, alpha: 0.5)
 
-
-        gameplayButton.fontName = "NovaMono"
-        gameplayButton.horizontalAlignmentMode = .center
-//        gameplayButton.position = CGPoint(x: leftMargin + playableWidth / 2, y: gameplayButton.fontSize * 4)
-        gameplayButton.position = CGPoint(x: leftMargin + playableWidth / 2, y: size.height / 2)
-        gameplayButton.zPosition = 51
-        gameplayButton.fontColor = UIColor.red
-//        gameplayButton.isHidden = true
         addChild(gameplayButton)
 
-
+            gameplayButtonLabel.fontName = "NovaMono"
+            gameplayButtonLabel.fontSize = size.height * 0.02
+            gameplayButtonLabel.fontColor = UIColor.white
+            gameplayButtonLabel.horizontalAlignmentMode = .center
+            gameplayButtonLabel.position = CGPoint(x: gameplayButton.frame.width / 2,
+                                               y: gameplayButton.frame.height / 2 - gameplayButtonLabel.fontSize * 0.4 )
+//            gameplayButtonLabel.zPosition = 52
+            gameplayButton.addChild(gameplayButtonLabel)
 
     }
 
@@ -289,7 +301,12 @@ class GameScene: SKScene {
             if isInitiallyPaused {
                 print("Start game")
                 isInitiallyPaused = false
-                gameplayButton.isHidden = true
+//                gameplayButtonLabel.isHidden = true
+                gameplayButton.position.y = rightPylon.resetY
+//                gameplayButton.fillTexture = finishLine
+                gameplayButtonLabel.fontColor = UIColor.white
+                gameplayButtonLabel.horizontalAlignmentMode = .right
+                gameplayButtonLabel.text = "FINISH LINE!"
                 pylonsAreRunning = true
                 print("  Start pylons")
             } else {
@@ -578,6 +595,12 @@ class GameScene: SKScene {
             }
         }
 
+        if pylonsRemaining <= 1 {
+            if rightPylon.position.y > size.height / 5 {
+                gameplayButton.position.y = rightPylon.position.y - rightPylon.frame.height / 2
+            }
+        }
+
         if !clockIsRunning && !runComplete && didPassFirstPylon {
             // start timing
             clockIsRunning = true
@@ -636,9 +659,10 @@ class GameScene: SKScene {
                             high_scores.scores_dictionary[str(difficulty_setting * 100 + starting_num_pylons)] = bestTime
                     */
             
-            gameplayButton.text = "TAP HERE TO RESET"
-            gameplayButton.position = CGPoint(x: leftMargin + playableWidth / 2, y: size.height / 2 + 100)
-            gameplayButton.isHidden = false
+            gameplayButtonLabel.fontColor = UIColor.white
+            gameplayButtonLabel.text = "TAP HERE TO RESET"
+//            gameplayButtonLabel.position = CGPoint(x: leftMargin + playableWidth / 2, y: size.height / 2 + 100)
+            gameplayButtonLabel.isHidden = false
         }
 
         speedometerLabel.text = String("\(Int(newAirspeed)) mph")
@@ -750,10 +774,14 @@ class GameScene: SKScene {
         rightPylon.isPassed = false
         rightPylon.texture = SKTexture(imageNamed: "pylon_R")
 
-        gameplayButton.position = CGPoint(x: leftMargin + playableWidth / 2, y: size.height / 2)
-        gameplayButton.text = "TAP HERE TO BEGIN"
+//        gameplayButtonLabel.position = CGPoint(x: leftMargin + playableWidth / 2, y: size.height / 2)
+        gameplayButtonLabel.fontColor = UIColor.green
+        gameplayButtonLabel.horizontalAlignmentMode = .left
+        gameplayButtonLabel.text = "TAP HERE TO BEGIN"
         isInitiallyPaused = true
         runComplete = false
         elapsedRunTime = 0
+
+        differenceLabel.isHidden = true
     }
 }

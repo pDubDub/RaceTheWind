@@ -75,7 +75,7 @@ class Pylon: SKSpriteNode {
                     texture = SKTexture(imageNamed: "pylon_L")
                 } else {
                     position.x = CGFloat.random(in: (min(maxRight - 100, otherPylon.x - 50)) ... (maxRight))
-                    texture = SKTexture(imageNamed: "pylon_R")
+                    texture = number != 1 ? SKTexture(imageNamed: "pylon_R") : SKTexture(imageNamed: "pylon_END")
                 }
                 // TODO - there is an occasional error, I think when the otherPylonX value is beyond the min/max value
 

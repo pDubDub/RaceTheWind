@@ -22,6 +22,7 @@
 		0D9B3D90254390B0008AE83A /* s6b_engn1_high.caf in Resources */ = {isa = PBXBuildFile; fileRef = 0D9B3D8D254390B0008AE83A /* s6b_engn1_high.caf */; };
 		0DB7C535251989FA00E4CF8F /* Plane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB7C534251989FA00E4CF8F /* Plane.swift */; };
 		0DBAAE982519B0F500B7B64A /* Cloud.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DBAAE972519B0F500B7B64A /* Cloud.swift */; };
+		0DBC90B1258AAE75008D2400 /* TouchableButtonNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DBC90B0258AAE75008D2400 /* TouchableButtonNode.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -42,6 +43,7 @@
 		0D9B3D8D254390B0008AE83A /* s6b_engn1_high.caf */ = {isa = PBXFileReference; lastKnownFileType = file; name = s6b_engn1_high.caf; path = Sounds/s6b_engn1_high.caf; sourceTree = SOURCE_ROOT; };
 		0DB7C534251989FA00E4CF8F /* Plane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Plane.swift; sourceTree = "<group>"; };
 		0DBAAE972519B0F500B7B64A /* Cloud.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cloud.swift; sourceTree = "<group>"; };
+		0DBC90B0258AAE75008D2400 /* TouchableButtonNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchableButtonNode.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -85,6 +87,7 @@
 				0D354DC823B29FC800116EB4 /* AppDelegate.swift */,
 				0D354DCE23B29FC800116EB4 /* GameScene.swift */,
 				0D2C87F425508C3100358320 /* TouchLabelNode.swift */,
+				0DBC90B0258AAE75008D2400 /* TouchableButtonNode.swift */,
 				0D820736252E47F800DD16F7 /* MyUtils.swift */,
 				0DB7C534251989FA00E4CF8F /* Plane.swift */,
 				0D4352B42527DF0E001E14AB /* Pylon.swift */,
@@ -189,6 +192,7 @@
 				0DBAAE982519B0F500B7B64A /* Cloud.swift in Sources */,
 				0D354DCF23B29FC800116EB4 /* GameScene.swift in Sources */,
 				0D4352B52527DF0E001E14AB /* Pylon.swift in Sources */,
+				0DBC90B1258AAE75008D2400 /* TouchableButtonNode.swift in Sources */,
 				0D354DD123B29FC800116EB4 /* GameViewController.swift in Sources */,
 				0DB7C535251989FA00E4CF8F /* Plane.swift in Sources */,
 				0D820737252E47F800DD16F7 /* MyUtils.swift in Sources */,
