@@ -35,6 +35,8 @@ class GameScene: SKScene {
 
     var lastUpdateTime: TimeInterval = 0
     var dt: TimeInterval = 0
+    
+//    let recordsManager = BestTimesManager()
 
     var startTime: TimeInterval = 0             // for run timing
     var currentTime: TimeInterval = 0
@@ -91,17 +93,39 @@ class GameScene: SKScene {
 
     var motionManager: CMMotionManager!
 
-
-
+    let spaceForNotch: CGFloat = 100
+    // used to move labels at top of the screen down a little bit. In theory, we could choose to apply it only if device has notch.
+   
+    
+    var sampleSetting: Int = 0
+    let storyboard: UIStoryboard
+    let settingsViewController: SettingsViewController
 
     override init(size: CGSize) {
-        let maxAspectRatio: CGFloat = 16.0/9.0
+        
+        let screenRect = UIScreen.main.bounds
+        let screenWidth = screenRect.size.width
+        let screenHeight = screenRect.size.height
+        print("UIScreen height is \(screenHeight) and width is \(screenWidth)")
+        
+        
+//        let maxAspectRatio: CGFloat = 16.0/9.0
+        let maxAspectRatio: CGFloat = screenHeight/screenWidth
+        // adding aspect ratio determined by actual screen size fixed label positioning
+        
         playableWidth = size.height / maxAspectRatio
         leftMargin = (size.width-playableWidth)/2.0
 //        let playableMargin = (size.width-playableWidth)/2.0
 //        playableRect = CGRect(x: 0, y: playableMargin,
 //                              width: playableWidth,
 //                              height: size.height)
+        print("GameScene height is \(size.height) and width is \(size.width)")
+//        This is the size of the gameScene, which is defined when initiated in GameViewController.
+//        It is not the actual screen size.
+        
+      
+        
+        
         print("Size.height is \(size.height) so the playable width is \(playableWidth) so the missing left margin is \(leftMargin) pixels wide.")
         print("Full width is \(size.width)")
 
@@ -111,9 +135,12 @@ class GameScene: SKScene {
         lastTouch = CGPoint(x: size.width/2, y: 200)
         previousYoke = lastTouch
 
-
+        storyboard = UIStoryboard(name: "SettingsView", bundle: nil)
+        settingsViewController = (storyboard.instantiateViewController(withIdentifier: "SettingsViewController") as? SettingsViewController)!
 
         super.init(size: size)
+        
+        
     }
 
     required init(coder aDecoder: NSCoder) {
@@ -157,7 +184,7 @@ class GameScene: SKScene {
         cloudShadow.zPosition = 1
         addChild(cloudShadow)
 
-
+//        addChild(playableRect)
 
         leftPylon.position = CGPoint(x: leftMargin + playableWidth * 0.25, y: size.height + leftPylon.size.height)
         leftPylon.resetY = size.height + leftPylon.size.height
@@ -219,12 +246,19 @@ class GameScene: SKScene {
 //        }
 
         // time labels
-        bestTimeLabel.text = "Best --:--"
+        // load best times
+        if let loadedBestTime = BestTimesManager.sharedTimesManager.getBestTime(forCourse: "One") {
+            print("loaded best time found of \(loadedBestTime)")
+            bestTime = loadedBestTime
+            bestTimeLabel.text = String(format: "Best %.02f", bestTime)
+        } else {
+            bestTimeLabel.text = "Best --:--"
+        }
         bestTimeLabel.fontName = "NovaMono"
-        bestTimeLabel.fontSize = size.height * 0.03
+        bestTimeLabel.fontSize = size.height * 0.02
         bestTimeLabel.fontColor = UIColor.white
         bestTimeLabel.horizontalAlignmentMode = .left
-        bestTimeLabel.position = CGPoint(x: leftMargin + 0.5 * bestTimeLabel.fontSize, y: size.height - 1.5 * bestTimeLabel.fontSize)
+        bestTimeLabel.position = CGPoint(x: leftMargin + 0.5 * bestTimeLabel.fontSize, y: size.height - 1.5 * bestTimeLabel.fontSize - spaceForNotch)
         addChild(bestTimeLabel)
 
         elapsedTimeLabel.text = "5:00"
@@ -232,12 +266,15 @@ class GameScene: SKScene {
         elapsedTimeLabel.fontSize = size.height * 0.05
         elapsedTimeLabel.fontColor = UIColor.white
         elapsedTimeLabel.horizontalAlignmentMode = .right
-        elapsedTimeLabel.position = CGPoint(x: bestTimeLabel.position.x + bestTimeLabel.frame.width, y: bestTimeLabel.position.y - elapsedTimeLabel.fontSize)
+//        print(bestTimeLabel.position.x)
+//        print(elapsedTimeLabel.frame.width)
+        elapsedTimeLabel.position = CGPoint(x: bestTimeLabel.position.x + elapsedTimeLabel.frame.width + 50, y: bestTimeLabel.position.y - elapsedTimeLabel.fontSize)
+        // 50 was added to x position because it was cutting off anything from the 10's position or higher
         addChild(elapsedTimeLabel)
 
         differenceLabel.text = "(+0:00)"
         differenceLabel.fontName = "NovaMono"
-        differenceLabel.fontSize = size.height * 0.03
+        differenceLabel.fontSize = size.height * 0.02
         differenceLabel.fontColor = UIColor.white
         differenceLabel.horizontalAlignmentMode = .right
         differenceLabel.position = CGPoint(x: elapsedTimeLabel.position.x, y: elapsedTimeLabel.position.y - 1.2 * differenceLabel.fontSize)
@@ -249,13 +286,13 @@ class GameScene: SKScene {
         speedometerLabel.fontSize = size.height * 0.03
         speedometerLabel.fontColor = UIColor.white
         speedometerLabel.horizontalAlignmentMode = .right
-        print("Size \(speedometerLabel.frame.width)")
+        print("Size of speedometer label is \(speedometerLabel.frame.width)")
         speedometerLabel.position = CGPoint(x: leftMargin + playableWidth - speedometerLabel.fontSize, y: 1.5 * speedometerLabel.fontSize)
         addChild(speedometerLabel)
 
         pylonCountLabel.text = "\(pylonsRemaining) pylons to go"
         pylonCountLabel.fontName = "NovaMono"
-        pylonCountLabel.fontSize = size.height * 0.03
+        pylonCountLabel.fontSize = size.height * 0.02
         pylonCountLabel.fontColor = UIColor.white
         pylonCountLabel.horizontalAlignmentMode = .right
         pylonCountLabel.position = CGPoint(x: leftMargin + playableWidth - pylonCountLabel.fontSize, y: bestTimeLabel.position.y)
@@ -263,7 +300,7 @@ class GameScene: SKScene {
 
         pylonMissLabel.text = "\(pylonsMissed) missed"
         pylonMissLabel.fontName = "NovaMono"
-        pylonMissLabel.fontSize = size.height * 0.03
+        pylonMissLabel.fontSize = size.height * 0.02
         pylonMissLabel.fontColor = UIColor.white
         pylonMissLabel.horizontalAlignmentMode = .right
         pylonMissLabel.position = CGPoint(x: pylonCountLabel.position.x, y: pylonCountLabel.position.y - 1.5 * pylonMissLabel.fontSize)
@@ -279,15 +316,21 @@ class GameScene: SKScene {
 
         addChild(gameplayButton)
 
-            gameplayButtonLabel.fontName = "NovaMono"
-            gameplayButtonLabel.fontSize = size.height * 0.02
-            gameplayButtonLabel.fontColor = UIColor.white
-            gameplayButtonLabel.horizontalAlignmentMode = .center
-            gameplayButtonLabel.position = CGPoint(x: gameplayButton.frame.width / 2,
-                                               y: gameplayButton.frame.height / 2 - gameplayButtonLabel.fontSize * 0.4 )
+        gameplayButtonLabel.fontName = "NovaMono"
+        gameplayButtonLabel.fontSize = size.height * 0.02
+        gameplayButtonLabel.fontColor = UIColor.white
+        gameplayButtonLabel.horizontalAlignmentMode = .center
+        gameplayButtonLabel.position = CGPoint(x: gameplayButton.frame.width / 2,
+                                           y: gameplayButton.frame.height / 2 - gameplayButtonLabel.fontSize * 0.4 )
 //            gameplayButtonLabel.zPosition = 52
-            gameplayButton.addChild(gameplayButtonLabel)
+        gameplayButton.addChild(gameplayButtonLabel)
 
+        // Add a gesture recognizer for three-finger tap
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleThreeFingerTap(_:)))
+        tapGesture.numberOfTouchesRequired = 3
+        view.addGestureRecognizer(tapGesture)
+        
+//       simpleGameSceneFunc()
     }
 
     override func update(_ currentTime: TimeInterval) {
@@ -334,7 +377,7 @@ class GameScene: SKScene {
                     // changed from 3 to 2, makes less tilt yield full side yoke
 
                 tilt.position.y = size.height/2 + CGFloat(accelerometerData.acceleration.y + 0.5) * size.height / 2
-                print("tilt.y: \(CGFloat(accelerometerData.acceleration.y)) \tyields position.y of: \(tilt.position.y)")
+//                print("tilt.y: \(CGFloat(accelerometerData.acceleration.y)) \tyields position.y of: \(tilt.position.y)")
                 // I want the tilt of -0.6 (full) to -0.75 to -0.9 (idle) to be the full range of
                 //      200 to size.height/2
             }
@@ -616,9 +659,10 @@ class GameScene: SKScene {
             clockIsRunning = false
 
             print("Game Over")
+            print("Previous best time is \(bestTime)")
 
-
-            if bestTime != 0 {
+            if bestTime > 1 {
+                print("Previous best exists")
                 timeDifference = elapsedRunTime - bestTime
                 if timeDifference >= 0 {
                     differenceLabel.text = String(format: "(+%.02f)", timeDifference)
@@ -627,17 +671,33 @@ class GameScene: SKScene {
                 }
                 differenceLabel.isHidden = false
 
-                if elapsedRunTime < bestTime {
-                    bestTime = elapsedRunTime
-                    bestTimeLabel.text = String(format: "Best %.02f", bestTime)
-                }
+//                if elapsedRunTime < bestTime || bestTime == 0 {
+//                    print("new best time set")
+//                    print("should try to save it")
+//                    bestTime = elapsedRunTime
+//                    bestTimeLabel.text = String(format: "Best %.02f", bestTime)
+//                }
             } else {
+                print("no previous best time exists")
                 // only run the first time, when there's no best time recorded
-                bestTime = elapsedRunTime
+//                bestTime = elapsedRunTime
 //                print(bestTime)
-                bestTimeLabel.text = String(format: "Best %.02f", bestTime)
+//                bestTimeLabel.text = String(format: "Best %.02f", bestTime)
             }
-
+            
+            if elapsedRunTime < bestTime || bestTime < 1 {
+                print("new best time set at \(elapsedRunTime)")
+                
+                bestTime = elapsedRunTime
+                bestTimeLabel.text = String(format: "Best %.02f", bestTime)
+                
+                print("should try to save it")
+                BestTimesManager.sharedTimesManager.setBestTime(elapsedRunTime, forCourse: "One")
+            }
+                
+            
+        
+        
             /*  List of Python END OF GAME actions:
                     √   clock_is_running = False
                     Fade out the engine sounds
@@ -704,7 +764,7 @@ class GameScene: SKScene {
 //        }
 
         lastTouch = pos
-        print(lastTouch)
+//        print(lastTouch)
     }
 //
     func touchMoved(toPoint pos : CGPoint) {
@@ -714,7 +774,7 @@ class GameScene: SKScene {
 //            self.addChild(n)
 //        }
         lastTouch = pos
-        print(lastTouch)
+//        print(lastTouch)
     }
 //
 //    func touchUp(atPoint pos : CGPoint) {
@@ -746,7 +806,41 @@ class GameScene: SKScene {
 //    }
 //
 //
-
+    
+    
+    // Function to handle three-finger tap gesture
+        @objc func handleThreeFingerTap(_ sender: UITapGestureRecognizer) {
+            if sender.state == .ended {
+                presentSettingsViewController()
+            }
+        }
+    // Function to present settings view controller
+        func presentSettingsViewController() {
+//            let storyboard = UIStoryboard(name: "SettingsView", bundle: nil)
+//            if let settingsViewController = storyboard.instantiateViewController(withIdentifier: "SettingsViewController") as? SettingsViewController {
+                // Present or push the settings view controller
+//                present(settingsViewController, animated: true, completion: nil)
+//                settingsViewController.sampleSettingValue = 3
+            print("Setting Value set to \(settingsViewController.sampleSettingValue) by GameScene")
+                settingsViewController.modalPresentationStyle = .overCurrentContext // Present modally over the current context
+                view?.window?.rootViewController?.present(settingsViewController, animated: true, completion: nil)
+//            }
+//            if let settingsViewController = SettingsViewController() // Instantiate your settings view controller
+            
+        }
+    // Function to dismiss settings view controller
+//        func dismissSettingsViewController() {
+//            print("Settings Dismissed")
+//            sampleSetting = settingsViewController.sampleSettingValue
+//            print("GameScene.sampleSetting set to \(sampleSetting) by dismissSettingsViewController")
+//            view?.window?.rootViewController?.dismiss(animated: true, completion: nil)
+//        }
+    
+//    func simpleGameSceneFunc() {
+//        print("Simple function called")
+//        print(" settingsViewController.sampleSettingValue is \(settingsViewController.sampleSettingValue)")
+//    }
+    
     func resetGame() {
         print("Game Reset!")
         pylonsAreRunning = false

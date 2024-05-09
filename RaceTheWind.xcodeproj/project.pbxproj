@@ -16,6 +16,9 @@
 		0D354DD623B29FC900116EB4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0D354DD523B29FC900116EB4 /* Assets.xcassets */; };
 		0D354DD923B29FC900116EB4 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0D354DD723B29FC900116EB4 /* LaunchScreen.storyboard */; };
 		0D4352B52527DF0E001E14AB /* Pylon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4352B42527DF0E001E14AB /* Pylon.swift */; };
+		0D6EF77B2BE353FC003E264C /* BestTimesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6EF77A2BE353FC003E264C /* BestTimesManager.swift */; };
+		0D71DB932BEC442700734474 /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D71DB922BEC442700734474 /* SettingsViewController.swift */; };
+		0D71DB952BEC46D600734474 /* SettingsView.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0D71DB942BEC46D600734474 /* SettingsView.storyboard */; };
 		0D820737252E47F800DD16F7 /* MyUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D820736252E47F800DD16F7 /* MyUtils.swift */; };
 		0D9B3D8E254390B0008AE83A /* s6b_engn1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 0D9B3D8B254390B0008AE83A /* s6b_engn1.caf */; };
 		0D9B3D8F254390B0008AE83A /* s6b_pass.caf in Resources */ = {isa = PBXBuildFile; fileRef = 0D9B3D8C254390B0008AE83A /* s6b_pass.caf */; };
@@ -37,6 +40,9 @@
 		0D354DD823B29FC900116EB4 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		0D354DDA23B29FC900116EB4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		0D4352B42527DF0E001E14AB /* Pylon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pylon.swift; sourceTree = "<group>"; };
+		0D6EF77A2BE353FC003E264C /* BestTimesManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BestTimesManager.swift; sourceTree = "<group>"; };
+		0D71DB922BEC442700734474 /* SettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewController.swift; sourceTree = "<group>"; };
+		0D71DB942BEC46D600734474 /* SettingsView.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = SettingsView.storyboard; sourceTree = "<group>"; };
 		0D820736252E47F800DD16F7 /* MyUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyUtils.swift; sourceTree = "<group>"; };
 		0D9B3D8B254390B0008AE83A /* s6b_engn1.caf */ = {isa = PBXFileReference; lastKnownFileType = file; name = s6b_engn1.caf; path = Sounds/s6b_engn1.caf; sourceTree = SOURCE_ROOT; };
 		0D9B3D8C254390B0008AE83A /* s6b_pass.caf */ = {isa = PBXFileReference; lastKnownFileType = file; name = s6b_pass.caf; path = Sounds/s6b_pass.caf; sourceTree = SOURCE_ROOT; };
@@ -86,6 +92,8 @@
 			children = (
 				0D354DC823B29FC800116EB4 /* AppDelegate.swift */,
 				0D354DCE23B29FC800116EB4 /* GameScene.swift */,
+				0D6EF77A2BE353FC003E264C /* BestTimesManager.swift */,
+				0D71DB922BEC442700734474 /* SettingsViewController.swift */,
 				0D2C87F425508C3100358320 /* TouchLabelNode.swift */,
 				0DBC90B0258AAE75008D2400 /* TouchableButtonNode.swift */,
 				0D820736252E47F800DD16F7 /* MyUtils.swift */,
@@ -94,6 +102,7 @@
 				0DBAAE972519B0F500B7B64A /* Cloud.swift */,
 				0D354DD023B29FC800116EB4 /* GameViewController.swift */,
 				0D354DD223B29FC800116EB4 /* Main.storyboard */,
+				0D71DB942BEC46D600734474 /* SettingsView.storyboard */,
 				0D354DD523B29FC900116EB4 /* Assets.xcassets */,
 				0D2C87F8255096E600358320 /* Fonts */,
 				0D9B3D91254390BB008AE83A /* Sounds */,
@@ -173,6 +182,7 @@
 			files = (
 				0D2C87F7255096DD00358320 /* NovaMono-Regular.ttf in Resources */,
 				0D9B3D8E254390B0008AE83A /* s6b_engn1.caf in Resources */,
+				0D71DB952BEC46D600734474 /* SettingsView.storyboard in Resources */,
 				0D354DD423B29FC800116EB4 /* Main.storyboard in Resources */,
 				0D354DD623B29FC900116EB4 /* Assets.xcassets in Resources */,
 				0D354DD923B29FC900116EB4 /* LaunchScreen.storyboard in Resources */,
@@ -190,8 +200,10 @@
 			files = (
 				0D2C87F525508C3100358320 /* TouchLabelNode.swift in Sources */,
 				0DBAAE982519B0F500B7B64A /* Cloud.swift in Sources */,
+				0D71DB932BEC442700734474 /* SettingsViewController.swift in Sources */,
 				0D354DCF23B29FC800116EB4 /* GameScene.swift in Sources */,
 				0D4352B52527DF0E001E14AB /* Pylon.swift in Sources */,
+				0D6EF77B2BE353FC003E264C /* BestTimesManager.swift in Sources */,
 				0DBC90B1258AAE75008D2400 /* TouchableButtonNode.swift in Sources */,
 				0D354DD123B29FC800116EB4 /* GameViewController.swift in Sources */,
 				0DB7C535251989FA00E4CF8F /* Plane.swift in Sources */,
@@ -347,7 +359,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.putnamGizmo.wheeler.RaceTheWind;
+				PRODUCT_BUNDLE_IDENTIFIER = com.putnamGizmo.RaceTheWind;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -365,7 +377,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.putnamGizmo.wheeler.RaceTheWind;
+				PRODUCT_BUNDLE_IDENTIFIER = com.putnamGizmo.RaceTheWind;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
